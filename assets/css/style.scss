@@ -1,0 +1,125 @@
+---
+---
+
+@import "{{ site.theme }}";
+@import "custom";
+
+/* Custom styles for uniform project cards */
+
+/* Force all column containers to have equal height */
+.projects .row,
+.project .row,
+.col,
+.col-md-6,
+.col-lg-4,
+[class*="col-"] {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Make all project cards the same height with higher specificity */
+.project-card,
+.card.project-card,
+.projects .card,
+.card,
+div[class*="project"] .card {
+  height: 100% !important;
+  min-height: 500px !important;
+  max-height: 500px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  margin-bottom: 2rem;
+  overflow: hidden !important;
+}
+
+/* Make project card images uniform size - more specific selectors */
+.project-card img,
+.card.project-card img,
+.projects .card img,
+.card img,
+.card-img,
+.card-img-top,
+img[class*="project"],
+.project-img,
+.card-img-top.project-img {
+  width: 100% !important;
+  height: 250px !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  flex-shrink: 0 !important;
+}
+
+/* Make card body take remaining space */
+.project-card .card-body,
+.card.project-card .card-body,
+.projects .card .card-body,
+.card-body,
+.card .card-body {
+  flex: 1 1 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 1.25rem !important;
+}
+
+/* Make description take available space and handle overflow */
+.project-card .card-text,
+.card.project-card .card-text,
+.projects .card .card-text,
+.card-text,
+p.card-text {
+  flex: 1 1 auto !important;
+  margin-bottom: 1rem !important;
+  line-height: 1.5 !important;
+  overflow: hidden !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 3 !important;
+  -webkit-box-orient: vertical !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Ensure consistent spacing for card elements */
+.project-card .card-title,
+.card.project-card .card-title,
+.projects .card .card-title,
+.card-title,
+h5.card-title {
+  margin-bottom: 0.75rem !important;
+  font-weight: 600 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Ensure badges/tools stay at bottom */
+.project-card .card-footer,
+.card.project-card .card-footer,
+.projects .card .card-footer,
+.card-footer,
+.project-card .tags,
+.card.project-card .tags,
+.tags,
+.card .tags {
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+}
+
+/* Additional specificity for portfolYOU theme */
+.projects-container .card,
+.project-container .card {
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Fix image aspect ratio issues */
+.card-img-top {
+  aspect-ratio: 16/9 !important;
+}
+
+/* Ensure grid layout works properly */
+.row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+.row > [class*="col-"] {
+  display: flex !important;
+}

@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Machine Learning for ICU Readmission Prediction - A comprehensive analysis using MIMIC-IV data to predict 30-day hospital readmissions with XGBoost, delivering $17.25M potential annual value.">
+    <meta name="author" content="Joseph Lattanzi">
+    <link rel="icon" type="image/svg+xml" href="logo.svg" />
+    <title>ICU Readmission Prediction | Joseph Lattanzi</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
+
+    <style>
+      :root {
+        --primary-color: #ffd203;
+        --secondary-color: #2563eb;
+        --accent-color: #10b981;
+        --text-dark: #1e293b;
+        --text-medium: #475569;
+        --text-light: #64748b;
+        --bg-light: #f8fafc;
+        --bg-gray: #f1f5f9;
+        --white: #ffffff;
+        --gradient-primary: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        --gradient-accent: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+        --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+        --transition: all 0.3s ease;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        color: var(--text-dark);
+        background-color: var(--white);
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+
+      a {
+        text-decoration: none;
+        color: var(--secondary-color);
+        transition: var(--transition);
+      }
+
+      a:hover {
+        color: var(--primary-color);
+      }
+
+      /* Navigation */
+      .navbar {
+        padding: 1rem 0;
+        background: var(--white);
+        box-shadow: var(--shadow-sm);
+        position: fixed;
+        width: 100%;
+        top: 0;
+        z-index: 1000;
+      }
+
+      .navbar-brand img {
+        height: 40px;
+      }
+
+      .nav-link {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 500;
+        color: var(--text-dark) !important;
+        margin: 0 0.5rem;
+        padding: 0.5rem 1rem !important;
+        border-radius: 8px;
+        transition: var(--transition);
+      }
+
+      .nav-link:hover {
+        background: var(--bg-light);
+        color: var(--secondary-color) !important;
+      }
+
+      /* Hero Section */
+      .hero {
+        background: var(--gradient-primary);
+        padding: 160px 0 100px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.5;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .hero h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        color: var(--white);
+        margin-bottom: 1rem;
+      }
+
+      .hero .subtitle {
+        font-size: 1.25rem;
+        color: var(--primary-color);
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        color: rgba(255,255,255,0.85);
+        max-width: 700px;
+        margin-bottom: 2rem;
+      }
+
+      .tech-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+      }
+
+      .tech-badge {
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        color: var(--white);
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+
+      .hero-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .btn-primary-custom {
+        background: var(--primary-color);
+        color: var(--text-dark);
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        border: none;
+        transition: var(--transition);
+      }
+
+      .btn-primary-custom:hover {
+        background: #e6bd00;
+        color: var(--text-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(255,210,3,0.4);
+      }
+
+      .btn-outline-custom {
+        background: transparent;
+        color: var(--white);
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        border: 2px solid rgba(255,255,255,0.3);
+        transition: var(--transition);
+      }
+
+      .btn-outline-custom:hover {
+        background: rgba(255,255,255,0.1);
+        color: var(--white);
+        border-color: rgba(255,255,255,0.5);
+      }
+
+      /* Key Metrics Section */
+      .metrics-section {
+        padding: 80px 0;
+        background: var(--white);
+        margin-top: -60px;
+        position: relative;
+        z-index: 10;
+      }
+
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.5rem;
+      }
+
+      .metric-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: var(--shadow-lg);
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+
+      .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      }
+
+      .metric-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 1.5rem;
+      }
+
+      .metric-icon.blue { background: rgba(37,99,235,0.1); color: var(--secondary-color); }
+      .metric-icon.green { background: rgba(16,185,129,0.1); color: var(--accent-color); }
+      .metric-icon.yellow { background: rgba(255,210,3,0.15); color: #c59f00; }
+      .metric-icon.purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+
+      .metric-value {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.25rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+      }
+
+      .metric-label {
+        font-size: 0.95rem;
+        color: var(--text-light);
+        line-height: 1.4;
+      }
+
+      /* Section Styles */
+      .section {
+        padding: 100px 0;
+      }
+
+      .section-alt {
+        background: var(--bg-light);
+      }
+
+      .section-title {
+        font-size: 2.25rem;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+      }
+
+      .section-subtitle {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        max-width: 600px;
+        margin-bottom: 3rem;
+      }
+
+      .title-divider {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.5rem 0 2rem;
+      }
+
+      .divider-line {
+        width: 50px;
+        height: 3px;
+        background: var(--primary-color);
+        border-radius: 2px;
+      }
+
+      .divider-dot {
+        width: 8px;
+        height: 8px;
+        background: var(--primary-color);
+        border-radius: 50%;
+      }
+
+      /* Executive Summary */
+      .summary-card {
+        background: var(--white);
+        border-radius: 20px;
+        padding: 3rem;
+        box-shadow: var(--shadow-md);
+        border-left: 5px solid var(--secondary-color);
+      }
+
+      .summary-card h3 {
+        color: var(--secondary-color);
+        margin-bottom: 1.5rem;
+      }
+
+      .summary-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .summary-list li {
+        padding: 0.75rem 0;
+        padding-left: 2rem;
+        position: relative;
+        border-bottom: 1px solid var(--bg-gray);
+      }
+
+      .summary-list li:last-child {
+        border-bottom: none;
+      }
+
+      .summary-list li::before {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        color: var(--accent-color);
+      }
+
+      /* Methodology Cards */
+      .method-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        height: 100%;
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+
+      .method-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-3px);
+      }
+
+      .method-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        font-size: 1.25rem;
+        background: var(--gradient-accent);
+        color: var(--white);
+      }
+
+      .method-card h4 {
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+      }
+
+      .method-card p {
+        color: var(--text-medium);
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+      }
+
+      .method-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .method-list li {
+        padding: 0.4rem 0;
+        font-size: 0.9rem;
+        color: var(--text-medium);
+        padding-left: 1.25rem;
+        position: relative;
+      }
+
+      .method-list li::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--secondary-color);
+      }
+
+      /* Results Section */
+      .results-image {
+        border-radius: 16px;
+        box-shadow: var(--shadow-lg);
+        width: 100%;
+        transition: var(--transition);
+      }
+
+      .results-image:hover {
+        transform: scale(1.02);
+      }
+
+      .results-card {
+        background: var(--white);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        height: 100%;
+      }
+
+      .results-card h4 {
+        font-size: 1.1rem;
+        color: var(--text-dark);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .results-card h4 i {
+        color: var(--secondary-color);
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .comparison-table th,
+      .comparison-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--bg-gray);
+        font-size: 0.95rem;
+      }
+
+      .comparison-table th {
+        font-weight: 600;
+        color: var(--text-dark);
+        background: var(--bg-light);
+      }
+
+      .comparison-table tr:last-child td {
+        border-bottom: none;
+      }
+
+      .comparison-table .highlight {
+        background: rgba(16,185,129,0.1);
+        font-weight: 600;
+      }
+
+      /* Business Value */
+      .value-card {
+        background: var(--gradient-primary);
+        border-radius: 20px;
+        padding: 3rem;
+        color: var(--white);
+      }
+
+      .value-card h3 {
+        color: var(--primary-color);
+        margin-bottom: 2rem;
+      }
+
+      .value-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .value-stat {
+        text-align: center;
+      }
+
+      .value-stat .number {
+        font-family: 'Poppins', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        display: block;
+      }
+
+      .value-stat .label {
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.8);
+      }
+
+      .value-description {
+        color: rgba(255,255,255,0.9);
+        font-size: 1.05rem;
+        line-height: 1.8;
+      }
+
+      /* Features Section */
+      .feature-importance {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .feature-bar-container {
+        flex: 1;
+        height: 12px;
+        background: var(--bg-gray);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .feature-bar {
+        height: 100%;
+        background: var(--gradient-accent);
+        border-radius: 6px;
+        transition: width 1s ease;
+      }
+
+      .feature-name {
+        width: 200px;
+        font-size: 0.9rem;
+        color: var(--text-medium);
+      }
+
+      .feature-value {
+        width: 60px;
+        text-align: right;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+      }
+
+      /* Timeline */
+      .timeline {
+        position: relative;
+        padding-left: 2rem;
+      }
+
+      .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: var(--bg-gray);
+        border-radius: 3px;
+      }
+
+      .timeline-item {
+        position: relative;
+        padding-bottom: 2rem;
+      }
+
+      .timeline-item:last-child {
+        padding-bottom: 0;
+      }
+
+      .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -2rem;
+        top: 0.25rem;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--secondary-color);
+        border: 3px solid var(--white);
+        box-shadow: var(--shadow-sm);
+        transform: translateX(-5.5px);
+      }
+
+      .timeline-item h4 {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        color: var(--text-dark);
+      }
+
+      .timeline-item p {
+        color: var(--text-medium);
+        font-size: 0.95rem;
+        margin: 0;
+      }
+
+      /* CTA Section */
+      .cta-section {
+        background: var(--gradient-primary);
+        padding: 80px 0;
+        text-align: center;
+      }
+
+      .cta-section h2 {
+        color: var(--white);
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      .cta-section p {
+        color: rgba(255,255,255,0.8);
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+      }
+
+      .cta-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      /* Footer */
+      .footer {
+        background: var(--text-dark);
+        padding: 2rem 0;
+        text-align: center;
+      }
+
+      .footer p {
+        color: rgba(255,255,255,0.7);
+        margin: 0;
+      }
+
+      /* Responsive */
+      @media (max-width: 991px) {
+        .hero h1 { font-size: 2.5rem; }
+        .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+        .value-stats { grid-template-columns: 1fr; gap: 1.5rem; }
+      }
+
+      @media (max-width: 767px) {
+        .hero { padding: 140px 0 80px; }
+        .hero h1 { font-size: 2rem; }
+        .hero p { font-size: 1rem; }
+        .section { padding: 60px 0; }
+        .section-title { font-size: 1.75rem; }
+        .metrics-grid { grid-template-columns: 1fr; }
+        .metric-card { padding: 1.5rem; }
+        .metric-value { font-size: 1.75rem; }
+        .summary-card { padding: 2rem; }
+        .feature-name { width: 140px; font-size: 0.8rem; }
+      }
+
+      /* Scroll animations */
+      .fade-in {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+
+      .fade-in.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+      <div class="container">
+        <a class="navbar-brand" href="/">
+          <img src="logo.svg" alt="Joseph Lattanzi" />
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/"><i class="fas fa-arrow-left me-1"></i> Back to Portfolio</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="https://github.com/jlattanzi4/icu-readmission-prediction" target="_blank">
+                <i class="fab fa-github me-1"></i> View Code
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-8 hero-content">
+            <p class="subtitle">Master of Science Capstone Project</p>
+            <h1>Who Comes Back? Machine Learning for ICU Readmission Prediction</h1>
+            <p>
+              An end-to-end machine learning system analyzing 545,316 hospital admissions and 150M+ data points
+              to predict 30-day ICU readmissions, enabling hospitals to target high-risk patients for early
+              intervention and optimize resource allocation.
+            </p>
+            <div class="tech-badges">
+              <span class="tech-badge"><i class="fas fa-code me-1"></i> R</span>
+              <span class="tech-badge"><i class="fas fa-brain me-1"></i> XGBoost</span>
+              <span class="tech-badge"><i class="fas fa-tree me-1"></i> Random Forest</span>
+              <span class="tech-badge"><i class="fas fa-database me-1"></i> MIMIC-IV</span>
+              <span class="tech-badge"><i class="fas fa-chart-line me-1"></i> Statistical Modeling</span>
+            </div>
+            <div class="hero-buttons">
+              <a href="https://github.com/jlattanzi4/icu-readmission-prediction" target="_blank" class="btn-primary-custom">
+                <i class="fab fa-github me-2"></i>View on GitHub
+              </a>
+              <a href="#methodology" class="btn-outline-custom">
+                <i class="fas fa-microscope me-2"></i>Explore Methodology
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Metrics -->
+    <section class="metrics-section">
+      <div class="container">
+        <div class="metrics-grid">
+          <div class="metric-card fade-in">
+            <div class="metric-icon blue">
+              <i class="fas fa-chart-area"></i>
+            </div>
+            <div class="metric-value">0.683</div>
+            <div class="metric-label">AUC Score<br><small>49% better than baseline</small></div>
+          </div>
+          <div class="metric-card fade-in">
+            <div class="metric-icon green">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="metric-value">$17.25M</div>
+            <div class="metric-label">Potential Annual Value<br><small>For large academic hospitals</small></div>
+          </div>
+          <div class="metric-card fade-in">
+            <div class="metric-icon yellow">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="metric-value">13</div>
+            <div class="metric-label">Number Needed to Screen<br><small>To prevent one readmission</small></div>
+          </div>
+          <div class="metric-card fade-in">
+            <div class="metric-icon purple">
+              <i class="fas fa-bullseye"></i>
+            </div>
+            <div class="metric-value">52.5%</div>
+            <div class="metric-label">Readmission Capture<br><small>In top risk tertile</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Executive Summary -->
+    <section class="section" id="summary">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <div class="text-center mb-5">
+              <h2 class="section-title">Executive Summary</h2>
+              <div class="title-divider justify-content-center">
+                <span class="divider-line"></span>
+                <span class="divider-dot"></span>
+                <span class="divider-line"></span>
+              </div>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="summary-card h-100">
+                  <h3><i class="fas fa-exclamation-triangle me-2"></i>The Challenge</h3>
+                  <p style="color: var(--text-medium); font-size: 1.05rem; line-height: 1.8;">
+                    Hospital readmissions cost approximately <strong>$26 billion annually</strong> in the United States.
+                    Approximately 20% of Medicare beneficiaries experience readmission within 30 days, with average
+                    US hospital readmission rates of 14.67% across all conditions. Despite targeted interventions,
+                    predicting which ICU patients will return remains a significant challenge.
+                  </p>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="summary-card h-100">
+                  <h3><i class="fas fa-lightbulb me-2"></i>The Solution</h3>
+                  <ul class="summary-list">
+                    <li>Machine learning model trained on <strong>545,316 hospital admissions</strong></li>
+                    <li>Engineered <strong>57 predictive features</strong> from clinical data</li>
+                    <li>Processed <strong>150M+ data points</strong> from MIMIC-IV database</li>
+                    <li>Compared Logistic Regression, Random Forest, and XGBoost</li>
+                    <li>Temporal validation for honest performance estimates</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Data & Methodology -->
+    <section class="section section-alt" id="methodology">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">Data & Methodology</h2>
+          <div class="title-divider justify-content-center">
+            <span class="divider-line"></span>
+            <span class="divider-dot"></span>
+            <span class="divider-line"></span>
+          </div>
+          <p class="section-subtitle mx-auto">
+            Leveraging the MIMIC-IV database with rigorous preprocessing, feature engineering, and model validation
+          </p>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-3 col-md-6">
+            <div class="method-card">
+              <div class="method-icon">
+                <i class="fas fa-database"></i>
+              </div>
+              <h4>Data Source</h4>
+              <p>MIMIC-IV: De-identified health data from Beth Israel Deaconess Medical Center (2008-2019)</p>
+              <ul class="method-list">
+                <li>546,028 Admissions</li>
+                <li>364,627 Patients</li>
+                <li>75M+ Lab Events</li>
+                <li>6 Core Data Tables</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="method-card">
+              <div class="method-icon">
+                <i class="fas fa-cogs"></i>
+              </div>
+              <h4>Feature Engineering</h4>
+              <p>57 engineered features spanning multiple clinical domains</p>
+              <ul class="method-list">
+                <li>Comorbidity Indices (Charlson)</li>
+                <li>Healthcare Utilization</li>
+                <li>Medication Risk Scores</li>
+                <li>Clinical Complexity Metrics</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="method-card">
+              <div class="method-icon">
+                <i class="fas fa-project-diagram"></i>
+              </div>
+              <h4>Model Development</h4>
+              <p>Systematic comparison of interpretable and complex algorithms</p>
+              <ul class="method-list">
+                <li>Logistic Regression</li>
+                <li>Random Forest</li>
+                <li>XGBoost (Selected)</li>
+                <li>Threshold Optimization</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-6">
+            <div class="method-card">
+              <div class="method-icon">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <h4>Validation Strategy</h4>
+              <p>Rigorous temporal validation preventing data leakage</p>
+              <ul class="method-list">
+                <li>Chronological Train/Val/Test Split</li>
+                <li>Calibration Assessment</li>
+                <li>Fairness Analysis</li>
+                <li>External Validation Ready</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Model Results -->
+    <section class="section" id="results">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">Model Performance</h2>
+          <div class="title-divider justify-content-center">
+            <span class="divider-line"></span>
+            <span class="divider-dot"></span>
+            <span class="divider-line"></span>
+          </div>
+          <p class="section-subtitle mx-auto">
+            XGBoost emerged as the top performer with strong discrimination and excellent calibration
+          </p>
+        </div>
+
+        <div class="row g-4 align-items-center mb-5">
+          <div class="col-lg-6">
+            <img src="https://raw.githubusercontent.com/jlattanzi4/icu-readmission-prediction/main/ROC_curves.png"
+                 alt="ROC Curves Comparison" class="results-image">
+          </div>
+          <div class="col-lg-6">
+            <div class="results-card">
+              <h4><i class="fas fa-trophy"></i> Model Comparison Results</h4>
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>AUC</th>
+                    <th>Sensitivity</th>
+                    <th>PPV</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Logistic Regression</td>
+                    <td>0.655</td>
+                    <td>64.2%</td>
+                    <td>28.5%</td>
+                  </tr>
+                  <tr>
+                    <td>Random Forest</td>
+                    <td>0.660</td>
+                    <td>65.1%</td>
+                    <td>29.2%</td>
+                  </tr>
+                  <tr class="highlight">
+                    <td><strong>XGBoost</strong></td>
+                    <td><strong>0.683</strong></td>
+                    <td><strong>68.8%</strong></td>
+                    <td><strong>29.8%</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+              <p style="margin-top: 1.5rem; color: var(--text-medium); font-size: 0.95rem;">
+                <strong>Key Finding:</strong> The 29.8% PPV represents a <strong>50% relative improvement</strong>
+                over the 20% baseline readmission rate, enabling more efficient resource allocation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="results-card">
+              <h4><i class="fas fa-chart-bar"></i> Top Predictive Features</h4>
+              <div class="feature-importance">
+                <div class="feature-item">
+                  <span class="feature-name">Clinical Complexity Score</span>
+                  <div class="feature-bar-container">
+                    <div class="feature-bar" style="width: 100%;"></div>
+                  </div>
+                  <span class="feature-value">100%</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-name">Charlson Comorbidity Index</span>
+                  <div class="feature-bar-container">
+                    <div class="feature-bar" style="width: 87%;"></div>
+                  </div>
+                  <span class="feature-value">87%</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-name">Healthcare Utilization</span>
+                  <div class="feature-bar-container">
+                    <div class="feature-bar" style="width: 75%;"></div>
+                  </div>
+                  <span class="feature-value">75%</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-name">Medication Burden</span>
+                  <div class="feature-bar-container">
+                    <div class="feature-bar" style="width: 68%;"></div>
+                  </div>
+                  <span class="feature-value">68%</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-name">Length of Stay</span>
+                  <div class="feature-bar-container">
+                    <div class="feature-bar" style="width: 54%;"></div>
+                  </div>
+                  <span class="feature-value">54%</span>
+                </div>
+                <div class="feature-item">
+                  <span class="feature-name">Age</span>
+                  <div class="feature-bar-container">
+                    <div class="feature-bar" style="width: 42%;"></div>
+                  </div>
+                  <span class="feature-value">42%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <img src="https://raw.githubusercontent.com/jlattanzi4/icu-readmission-prediction/main/xgboost_calibration.png"
+                 alt="XGBoost Calibration Plot" class="results-image">
+            <p style="margin-top: 1rem; color: var(--text-medium); font-size: 0.9rem; text-align: center;">
+              <strong>Well-Calibrated Model:</strong> ECE = 0.022, indicating trustworthy probability estimates
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Business Value -->
+    <section class="section section-alt" id="value">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-10">
+            <div class="value-card">
+              <h3><i class="fas fa-chart-line me-2"></i>Clinical Impact & Business Value</h3>
+              <div class="value-stats">
+                <div class="value-stat">
+                  <span class="number">$1.3M</span>
+                  <span class="label">Net Annual Benefit<br>(30,000-discharge hospital)</span>
+                </div>
+                <div class="value-stat">
+                  <span class="number">117%</span>
+                  <span class="label">Return on Investment<br>After intervention costs</span>
+                </div>
+                <div class="value-stat">
+                  <span class="number">1.5x</span>
+                  <span class="label">More Efficient<br>Than random selection</span>
+                </div>
+              </div>
+              <p class="value-description">
+                The model enables a <strong>tiered intervention strategy</strong>: High-risk patients (>40% probability)
+                receive intensive transitional care management with home visits ($800-1000/patient), moderate-risk patients
+                (20-40%) receive standard TCM with phone follow-up ($400-600/patient), and low-risk patients (<20%)
+                receive educational materials and portal access ($100-200/patient).
+              </p>
+              <p class="value-description" style="margin-top: 1rem;">
+                <strong>Key Insight:</strong> A model doesn't need to be perfect to be valuable. A 0.683 AUC translates
+                to substantial clinical and financial impact when applied at scale. The difference between 20% and 30% PPV
+                represents millions in annual savings.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fairness & Limitations -->
+    <section class="section" id="fairness">
+      <div class="container">
+        <div class="row g-5">
+          <div class="col-lg-6">
+            <h2 class="section-title">Fairness Analysis</h2>
+            <div class="title-divider">
+              <span class="divider-line"></span>
+              <span class="divider-dot"></span>
+              <span class="divider-line"></span>
+            </div>
+            <p style="color: var(--text-medium); margin-bottom: 1.5rem;">
+              Proactive examination of model performance across demographic groups ensures equitable healthcare delivery.
+            </p>
+            <div class="results-card">
+              <h4><i class="fas fa-balance-scale"></i> Key Findings</h4>
+              <ul class="summary-list">
+                <li>Best performance for Black/African American patients (74% sensitivity)</li>
+                <li>Lower sensitivity for Hispanic/Latino patients (54%) requires attention</li>
+                <li>No systematic bias detected in calibration across groups</li>
+                <li>Data quality categories (UNKNOWN race) excluded to prevent spurious correlations</li>
+                <li>Fairness monitoring infrastructure recommended for deployment</li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <h2 class="section-title">Implementation Roadmap</h2>
+            <div class="title-divider">
+              <span class="divider-line"></span>
+              <span class="divider-dot"></span>
+              <span class="divider-line"></span>
+            </div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <h4>Immediate (Month 1-3)</h4>
+                <p>Prospective validation study, external validation if multi-center data available, address identified limitations</p>
+              </div>
+              <div class="timeline-item">
+                <h4>Medium-Term (Month 4-9)</h4>
+                <p>Pilot deployment with 20-30% of discharge population, develop tiered intervention protocols, implement fairness monitoring</p>
+              </div>
+              <div class="timeline-item">
+                <h4>Long-Term (Month 10+)</h4>
+                <p>Quarterly model retraining, continuous quality improvement dashboard, integrate NLP from clinical notes</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Conclusions -->
+    <section class="section section-alt" id="conclusions">
+      <div class="container">
+        <div class="text-center mb-5">
+          <h2 class="section-title">Key Takeaways</h2>
+          <div class="title-divider justify-content-center">
+            <span class="divider-line"></span>
+            <span class="divider-dot"></span>
+            <span class="divider-line"></span>
+          </div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+          <div class="col-lg-4 col-md-6">
+            <div class="method-card text-center">
+              <div class="method-icon mx-auto">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h4>Validated Performance</h4>
+              <p>XGBoost achieved 0.683 AUC on temporally held-out test data with minimal degradation from validation, indicating excellent generalization.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="method-card text-center">
+              <div class="method-icon mx-auto">
+                <i class="fas fa-hand-holding-usd"></i>
+              </div>
+              <h4>Tangible ROI</h4>
+              <p>117% ROI after accounting for intervention and model costs, with Number Needed to Screen of 13 patients to prevent one readmission.</p>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <div class="method-card text-center">
+              <div class="method-icon mx-auto">
+                <i class="fas fa-road"></i>
+              </div>
+              <h4>Clear Path Forward</h4>
+              <p>Administrative EHR data can identify high-risk patients with clinically meaningful accuracy, enabling efficient resource allocation at scale.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <div class="container">
+        <h2>Explore the Full Analysis</h2>
+        <p>View the complete code, methodology, and detailed findings on GitHub</p>
+        <div class="cta-buttons">
+          <a href="https://github.com/jlattanzi4/icu-readmission-prediction" target="_blank" class="btn-primary-custom">
+            <i class="fab fa-github me-2"></i>View Repository
+          </a>
+          <a href="/" class="btn-outline-custom">
+            <i class="fas fa-arrow-left me-2"></i>Back to Portfolio
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2025 Joseph Lattanzi. Master of Science in Applied Data Science - Bay Path University</p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Scroll Animation -->
+    <script>
+      // Fade in elements on scroll
+      const fadeElements = document.querySelectorAll('.fade-in');
+
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, observerOptions);
+
+      fadeElements.forEach(el => observer.observe(el));
+
+      // Smooth scroll for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

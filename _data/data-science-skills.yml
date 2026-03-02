@@ -1,0 +1,15 @@
+- name: Machine Learning
+  percentage: 85
+  color: info
+
+- name: Data Visualization
+  percentage: 80
+  color: success
+
+- name: Optimization Algorithms
+  percentage: 85
+  color: primary
+
+- name: Web Scraping & APIs
+  percentage: 90
+  color: warning

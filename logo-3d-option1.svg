@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="50" height="50">
+  <defs>
+    <!-- Gradient for 3D effect -->
+    <linearGradient id="jGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffe84d;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ffd203;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e6bc03;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Shadow layer -->
+  <path d="M 38 25 L 58 25 L 58 60 Q 58 75 48 75 Q 38 75 38 65 L 38 62 L 48 62 L 48 65 Q 48 68 48 68 Q 48 68 48 68 L 48 35 L 38 35 Z"
+        fill="#cccccc" transform="translate(3, 3)" opacity="0.3"/>
+
+  <!-- Main J with 3D effect -->
+  <path d="M 35 22 L 55 22 L 55 60 Q 55 78 43 78 Q 31 78 31 65 L 31 60 L 43 60 L 43 65 Q 43 68 45 68 Q 47 68 47 65 L 47 32 L 35 32 Z"
+        fill="url(#jGradient1)" stroke="#e6bc03" stroke-width="2"/>
+
+  <!-- Highlight for extra depth -->
+  <path d="M 37 24 L 53 24 L 53 32 L 45 32 L 45 60 Q 45 66 45 68"
+        fill="none" stroke="#fff9cc" stroke-width="2" opacity="0.6"/>
+</svg>
