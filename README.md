@@ -21,5 +21,3 @@ Visit `http://localhost:4000`
 ## Adding New Projects
 
 Add new project sections to `projects.md` following the existing format.
-# Cache refresh
-# Cache refresh
