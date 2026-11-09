@@ -8,9 +8,10 @@
    ================================================ */
 :root {
   --primary-color: #ffd203;
+  --primary-text: #8a6d00; /* the yellow, darkened for text on light backgrounds (4.9:1 on white) */
   --secondary-color: #2596be;
   --text-dark: #2c3e50;
-  --text-light: #7f8c8d;
+  --text-light: #5f6c6e; /* 5.4:1 on white */
   --bg-light: #f8f9fa;
   --bg-gray: #ecf0f1;
   --white: #ffffff;
@@ -46,7 +47,7 @@ h4 { font-size: 1.25rem; }
 
 a {
   text-decoration: none;
-  color: var(--primary-color);
+  color: var(--primary-text);
   transition: var(--transition);
 }
 
@@ -139,7 +140,17 @@ a:hover {
 
 .nav-link:hover,
 .nav-link.active {
-  color: var(--primary-color) !important;
+  color: var(--primary-text) !important;
+}
+
+/* On the yellow scrolled header, yellow accents would vanish */
+.header_area.scrolled .nav-link:hover,
+.header_area.scrolled .nav-link.active {
+  color: var(--text-dark) !important;
+}
+
+.header_area.scrolled .nav-link::after {
+  background-color: var(--text-dark);
 }
 
 
@@ -250,7 +261,7 @@ a:hover {
 }
 
 .projects_item:hover .projects_text h4 {
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 
 .projects_text p {
@@ -260,7 +271,7 @@ a:hover {
 }
 
 .projects_text p:first-of-type {
-  color: var(--primary-color);
+  color: var(--primary-text);
   font-weight: 500;
   text-transform: uppercase;
   font-size: 0.85rem;
@@ -344,7 +355,7 @@ a:hover {
 }
 
 .skills-list strong {
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 
 .social-links {
@@ -413,7 +424,7 @@ a:hover {
 }
 
 .contact-item a:hover {
-  color: var(--primary-color);
+  color: var(--primary-text);
 }
 
 /* ================================================
@@ -435,8 +446,13 @@ a:hover {
    9. RESPONSIVE DESIGN
    ================================================ */
 @media (max-width: 991px) {
+  /* The open menu gets its own panel so it doesn't sit on top of the page */
   .navbar-nav {
-    margin-top: 1rem;
+    margin-top: 0.75rem;
+    padding: 0.25rem 1.25rem;
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   }
 
   .nav-link {
@@ -522,7 +538,7 @@ a:hover {
    11. UTILITY CLASSES
    ================================================ */
 .text-primary {
-  color: var(--primary-color) !important;
+  color: var(--primary-text) !important;
 }
 
 .bg-primary {
