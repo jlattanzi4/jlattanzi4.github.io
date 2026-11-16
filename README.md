@@ -2,24 +2,33 @@
 
 Joseph Lattanzi's portfolio: https://jlattanzi4.github.io/
 
-The home page is a desk. Each project lies on it as an object you can drag, throw and turn over:
+You sit at my desk. Everything on it does something:
 
-- **A marked-up 10-K filing** (the SEC study). Its back redlines real sentences from Kellogg's fiscal 2019 risk section.
-- **A survivor pick sheet** (the NFL optimizer). It shows this week's call, computed in the browser by the optimizer's own engine (`/nfl-survivor-optimizer/js/worker.js`) from its published data, so the sheet is as current as the optimizer.
-- **A race ticket** (Box Box). Its back is an F1 start-lights reaction test.
-- **A bound thesis** and **a business card**.
+| On the desk | What it does |
+|---|---|
+| The monitor | Click it and you lean in to a working desktop, with a window for each project |
+| A manila folder (the SEC study) | Opens to a marked-up page, then shows the study, where real sentences from a 10-K redline themselves |
+| A football (the NFL optimizer) | Spins, then shows this week's survivor pick, computed in your browser by the optimizer's own engine |
+| A toy F1 car (Box Box) | Does a lap of the monitor, then opens an F1 start-lights reaction test |
+| The thesis on a stack of books | Opens the readmission thesis |
+| Sticky notes | Email, GitHub, LinkedIn |
+| Espresso, AirPods, snake plant | A sip at a time, a lid that pops, a wiggle |
+| The desk lamp | Switches the room between day and night |
+| The keyboard | Its keys go down when you type on yours |
 
-Under the desk is the same work as a plain list. Without JavaScript the pieces lie in a pile and everything still links.
+Below the desk is the same work as a plain list, which is also what shows without JavaScript or WebGL. Keyboard users can Tab through every object.
 
-## Files
+## How it's built
 
-- `index.html`: the content.
-- `desk.css`: the mat, the pieces, and the pile layout used on narrow screens.
-- `desk.js`: dragging, turning over, the rulers, and the three small live parts.
-- `images/og.jpg`: the share card.
+[three.js](https://threejs.org/) from a CDN, no build step:
 
-No build step. GitHub Pages serves `main`.
+- `room/props.js`: the desk and everything on it, built from simple shapes at real-world size, with textures drawn on canvases.
+- `room/screen.js`: the monitor's desktop, painted onto the screen from the chair and shown as real HTML when you lean in, plus the live parts (the NFL pick, the redline, the start lights).
+- `room/main.js`: the camera, the lights, day and night, hovering, clicking, and keyboard access.
+- `room.css`, `index.html`.
+
+The NFL pick loads `/nfl-survivor-optimizer/js/worker.js` and its data from the same domain. If that isn't available, the window links to the optimizer instead.
 
 ## Running it locally
 
-The pick sheet loads the optimizer from the same domain, so serve the site with the NFL project's `docs/` folder mounted at `/nfl-survivor-optimizer/`. Without it the sheet shows a link instead of the call.
+Serve the folder with the NFL project's `docs/` mounted at `/nfl-survivor-optimizer/` so the live pick works, for example with symlinks in a temporary folder and `python3 -m http.server`.
