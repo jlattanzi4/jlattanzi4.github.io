@@ -1,255 +1,201 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="Joseph Lattanzi - Data Scientist Portfolio. Machine learning, optimization algorithms, and data analysis projects.">
-    <meta name="author" content="Joseph Lattanzi">
-    <link rel="icon" type="image/svg+xml" href="logo.svg" />
-    <title>Joseph Lattanzi | Data Scientist Portfolio</title>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joseph Lattanzi</title>
+<meta name="description" content="Joseph Lattanzi, data scientist. Projects: an NFL survivor-pool optimizer, a study of boilerplate in 47,643 SEC risk disclosures, and a fantasy F1 game scored from live race data.">
+<meta name="author" content="Joseph Lattanzi">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Joseph Lattanzi">
+<meta property="og:description" content="Data scientist. I take a question I care about, measure it carefully, and ship the answer as something people can use.">
+<meta property="og:url" content="https://jlattanzi4.github.io/">
+<meta property="og:image" content="https://jlattanzi4.github.io/images/og.jpg">
+<meta property="og:image:alt" content="Joseph Lattanzi's portfolio: three projects, each shown with its real output.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://jlattanzi4.github.io/">
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --paper: #ffffff;
+  --ink: #1c1e21;
+  --ink-2: #5b6068;
+  --rule: #e4e6e9;
+  --soft: #b4b9c0;
+  --focus: #2a78d6;
+  --serif: "Source Serif 4", Georgia, serif;
+  --sans: "Public Sans", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --paper: #1a1a19;
+    --ink: #f0efec;
+    --ink-2: #b4b3ad;
+    --rule: #34342f;
+    --soft: #6b6a64;
+    --focus: #3987e5;
+  }
+}
 
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 1.125rem/1.6 var(--serif);
+  font-optical-sizing: auto;
+}
+a { color: inherit; text-decoration-color: var(--soft); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+a:hover { text-decoration-color: currentColor; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+.page { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
 
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
+/* Name and the three ways to reach me. */
+.top {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem;
+  padding: 1.75rem 0 0;
+}
+.top h1 { margin: 0; font: 600 1.0625rem/1.3 var(--serif); }
+.top h1 a { text-decoration: none; }
+.top nav { display: flex; gap: 1.25rem; font: 400 0.875rem/1.3 var(--sans); color: var(--ink-2); }
+.top nav a { text-decoration: none; }
+.top nav a:hover { color: var(--ink); text-decoration: underline; }
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
+/* The one large thing on the page: what I do, in a sentence. */
+.intro {
+  max-width: 34rem; margin: 6rem 0 0;
+  font: 400 clamp(1.5rem, 3.6vw, 2rem)/1.3 var(--serif); letter-spacing: -0.01em;
+}
 
-  <body>
-    <!-- Header Navigation -->
-    <header class="header_area">
-      <div class="main_menu">
-        <nav class="navbar navbar-expand-lg navbar-light">
-          <div class="container">
-            <a class="navbar-brand" href="/">
-              <img src="logo.svg" alt="Joseph Lattanzi" class="logo-image" />
-              <img src="logo-white.svg" alt="Joseph Lattanzi" class="logo-white" />
-            </a>
-            <button
-              class="navbar-toggler"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarNav"
-              aria-controls="navbarNav"
-              aria-expanded="false"
-              aria-label="Toggle navigation"
-            >
-              <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-              <ul class="navbar-nav ms-auto">
-                <li class="nav-item active">
-                  <a class="nav-link" href="/">Home</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#about">About</a>
-                </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#contact">Contact</a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </nav>
-      </div>
-    </header>
+h2 {
+  margin: 4.5rem 0 0; padding-bottom: 0.75rem; border-bottom: 1px solid var(--rule);
+  font: 500 0.875rem/1.3 var(--sans); color: var(--ink-2);
+}
 
-    <!-- Portfolio Section -->
-    <section class="section_gap portfolio_area" id="work">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-6 text-center">
-            <div class="main-title">
-              <h1>Joseph Lattanzi</h1>
-              <div class="title-divider">
-                <span class="divider-line"></span>
-                <span class="divider-dot"></span>
-                <span class="divider-line"></span>
-              </div>
-              <p>
-                Product Data Scientist at Klaviyo. On my own time I build decision
-                tools: optimizers, models, and simulations that people actually use.
-              </p>
-            </div>
-          </div>
-        </div>
+/* A project: what it is and what it found, beside its real output. */
+.project {
+  display: grid; grid-template-columns: minmax(0, 1fr) 27rem; gap: 2.75rem;
+  padding: 2.25rem 0; border-bottom: 1px solid var(--rule);
+}
+.project h3 { margin: 0 0 0.4rem; font: 600 1.3125rem/1.3 var(--serif); letter-spacing: -0.005em; }
+.project h3 a { text-decoration: none; }
+.project h3 a:hover { text-decoration: underline; text-decoration-color: var(--soft); }
+.project p { margin: 0; max-width: 34rem; }
+/* Year and tools on one line, the year in a fixed column so a long list wraps under itself. */
+.page .meta {
+  display: grid; grid-template-columns: 3rem minmax(0, 1fr); margin-top: 1rem;
+  font: 400 0.875rem/1.5 var(--sans); color: var(--ink-2);
+}
+.page .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-top: 0.6rem; font: 500 0.9375rem/1.5 var(--sans); }
+.shot { display: block; align-self: start; margin-top: 0.3rem; }
+.shot img {
+  display: block; width: 100%; height: auto; aspect-ratio: 3 / 2;
+  border: 1px solid var(--rule); border-radius: 6px;
+}
+.shot:hover img { border-color: var(--soft); }
 
-        <!-- Projects Grid -->
-        <div class="projects_inner row">
-          <!-- NFL Survivor Pool Optimizer -->
-          <div class="col-lg-4 col-md-6 col-sm-12">
-            <a href="https://jlattanzi4.github.io/nfl-survivor-optimizer/" target="_blank" class="project-link">
-              <div class="projects_item">
-                <img
-                  class="img-fluid w-100"
-                  src="https://raw.githubusercontent.com/jlattanzi4/nfl-survivor-optimizer/main/images/demo.png"
-                  alt="NFL Survivor Pool Optimizer"
-                />
-                <div class="projects_text">
-                  <h4>NFL Survivor Pool Optimizer</h4>
-                  <p>Python | JavaScript | Hungarian Algorithm | Monte Carlo</p>
-                  <p class="project-desc">Hungarian-algorithm path search plus a 20,000-season Monte Carlo pool simulation on live market lines, running entirely in the browser.</p>
-                </div>
-              </div>
-            </a>
-          </div>
+.earlier { padding: 1.5rem 0; border-bottom: 1px solid var(--rule); }
+.earlier h3 { margin: 0 0 0.4rem; font: 600 1.125rem/1.3 var(--serif); }
+.earlier h3 a { text-decoration: none; }
+.earlier h3 a:hover { text-decoration: underline; text-decoration-color: var(--soft); }
+.earlier p { margin: 0; max-width: 34rem; }
 
-          <!-- SEC Risk Factor Intelligence -->
-          <div class="col-lg-4 col-md-6 col-sm-12">
-            <a href="https://jlattanzi4.github.io/sec-risk-classifier/report.html" target="_blank" class="project-link">
-              <div class="projects_item">
-                <img
-                  class="img-fluid w-100"
-                  src="https://raw.githubusercontent.com/jlattanzi4/sec-risk-classifier/main/images/portfolio_thumbnail.png"
-                  alt="SEC Risk Factor Intelligence"
-                />
-                <div class="projects_text">
-                  <h4>SEC 10-K Risk Factor Intelligence</h4>
-                  <p>Python | NLP | BERTopic | SHAP | Transformers</p>
-                  <p class="project-desc">Across 79,000 risk disclosures from 14,000 companies, filings are 51% alike in meaning but only 21% alike in wording: boilerplate in different words.</p>
-                </div>
-              </div>
-            </a>
-          </div>
+.about p { max-width: 34rem; margin: 1.5rem 0 0; }
+.about .toolkit { font: 400 0.9375rem/1.6 var(--sans); color: var(--ink-2); }
+.about .toolkit b { font-weight: 600; color: var(--ink); }
 
-          <!-- Box Box: F1 Fantasy -->
-          <div class="col-lg-4 col-md-6 col-sm-12">
-            <a href="https://box-box-rho.vercel.app/" target="_blank" class="project-link">
-              <div class="projects_item">
-                <img
-                  class="img-fluid w-100"
-                  src="https://raw.githubusercontent.com/jlattanzi4/box-box/main/images/portfolio_thumbnail.svg"
-                  alt="Box Box F1 Fantasy"
-                />
-                <div class="projects_text">
-                  <h4>Box Box: F1 Fantasy Head-to-Head</h4>
-                  <p>Next.js | TypeScript | Prisma | PostgreSQL</p>
-                  <p class="project-desc">Full-stack F1 fantasy game with real-time scoring from live race data. Pick drivers, constructors, and bet on race chaos with friends.</p>
-                </div>
-              </div>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+footer {
+  margin-top: 5rem; padding-top: 1rem; border-top: 1px solid var(--rule);
+  font: 400 0.8125rem/1.5 var(--sans); color: var(--ink-2);
+}
 
-    <!-- About Section -->
-    <section class="section_gap about_area gray-bg" id="about">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-4 text-center mb-4 mb-lg-0">
-            <img src="IMG_0056.JPG" alt="Joseph Lattanzi" class="profile-photo" />
-          </div>
-          <div class="col-lg-8">
-            <div class="about-content">
-              <h2>About Me</h2>
-              <div class="title-divider-left">
-                <span class="divider-line"></span>
-                <span class="divider-dot"></span>
-                <span class="divider-line"></span>
-              </div>
-              <p>
-                I'm a Product Data Scientist at Klaviyo, where I work on product analytics
-                and experimentation.
-              </p>
-              <p>
-                Outside of work I build things I'd want to use myself, usually at the
-                intersection of sports, markets, and decision-making. I care most about
-                framing the problem well, being honest about uncertainty, and shipping
-                something that holds up when people actually use it.
-              </p>
-              <p><strong>Toolkit:</strong></p>
-              <ul class="skills-list">
-                <li><strong>Languages:</strong> Python, SQL, R, TypeScript</li>
-                <li><strong>Methods:</strong> Experimentation and causal inference, forecasting, optimization, ML, NLP</li>
-                <li><strong>Building:</strong> Data pipelines, model deployment, web apps, LLM-powered tools</li>
-              </ul>
-              <div class="social-links mt-4">
-                <a href="https://github.com/jlattanzi4" target="_blank" class="social-icon">
-                  <i class="fab fa-github"></i>
-                </a>
-                <a href="https://linkedin.com/in/joseph-lattanzi" target="_blank" class="social-icon">
-                  <i class="fab fa-linkedin"></i>
-                </a>
-                <a href="mailto:lattanzi.joseph@gmail.com" class="social-icon">
-                  <i class="fas fa-envelope"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+@media (max-width: 720px) {
+  body { font-size: 1.0625rem; }
+  .intro { margin-top: 3.5rem; }
+  h2 { margin-top: 3.5rem; }
+  .project { grid-template-columns: 1fr; gap: 1.25rem; }
+  .shot { order: 2; margin-top: 0; }
+}
+</style>
+</head>
+<body>
+<div class="page">
 
-    <!-- Contact Section -->
-    <section class="section_gap contact_area" id="contact">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-6 text-center">
-            <div class="main-title">
-              <h2>Get In Touch</h2>
-              <p>Feel free to reach out for collaborations or just a friendly chat.</p>
-            </div>
-            <div class="contact-info">
-              <div class="contact-item">
-                <i class="fas fa-envelope"></i>
-                <a href="mailto:lattanzi.joseph@gmail.com">lattanzi.joseph@gmail.com</a>
-              </div>
-              <div class="contact-item">
-                <i class="fab fa-linkedin"></i>
-                <a href="https://linkedin.com/in/joseph-lattanzi" target="_blank">linkedin.com/in/joseph-lattanzi</a>
-              </div>
-              <div class="contact-item">
-                <i class="fab fa-github"></i>
-                <a href="https://github.com/jlattanzi4" target="_blank">github.com/jlattanzi4</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+<header class="top">
+  <h1><a href="/">Joseph Lattanzi</a></h1>
+  <nav aria-label="Contact">
+    <a href="https://github.com/jlattanzi4">GitHub</a>
+    <a href="https://www.linkedin.com/in/joseph-lattanzi/">LinkedIn</a>
+    <a href="mailto:lattanzi.joseph@gmail.com">Email</a>
+  </nav>
+</header>
 
-    <!-- Footer -->
-    <footer class="footer_area">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-6 text-center">
-            <p>&copy; 2026 Joseph Lattanzi. All rights reserved.</p>
-          </div>
-        </div>
-      </div>
-    </footer>
+<main>
+<p class="intro">Data scientist. I take a question I care about, measure it carefully, and ship the answer as something people can use.</p>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<section aria-labelledby="work-h">
+  <h2 id="work-h">Selected work</h2>
 
-    <!-- Smooth scroll -->
-    <script>
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-          e.preventDefault();
-          const target = document.querySelector(this.getAttribute('href'));
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
-      });
+  <article class="project">
+    <div>
+      <h3><a href="https://jlattanzi4.github.io/nfl-survivor-optimizer/">NFL Survivor Optimizer</a></h3>
+      <p>Which team to pick each week of a survivor pool. It finds the best path through the season exactly, as an assignment problem, and prices each pick against the rest of the pool with 20,000 simulated seasons. Lines come from live betting markets and refresh every four hours.</p>
+      <p class="meta"><span>2026</span><span>Python, JavaScript, Hungarian algorithm, Monte Carlo</span></p>
+      <p class="links"><a href="https://jlattanzi4.github.io/nfl-survivor-optimizer/">Open the optimizer</a><a href="https://github.com/jlattanzi4/nfl-survivor-optimizer">Code</a></p>
+    </div>
+    <a class="shot" href="https://jlattanzi4.github.io/nfl-survivor-optimizer/" tabindex="-1" aria-hidden="true"><img src="images/nfl-survivor-optimizer.jpg" width="960" height="640" alt="" decoding="async"></a>
+  </article>
 
-      // Navbar scroll effect
-      window.addEventListener('scroll', function() {
-        const header = document.querySelector('.header_area');
-        if (window.scrollY > 50) {
-          header.classList.add('scrolled');
-        } else {
-          header.classList.remove('scrolled');
-        }
-      });
-    </script>
-  </body>
+  <article class="project">
+    <div>
+      <h3><a href="https://jlattanzi4.github.io/sec-risk-classifier/report.html">How much of a risk disclosure is boilerplate?</a></h3>
+      <p>47,643 risk sections from SEC annual reports, each compared sentence by sentence with the same company's section a year earlier. 73% of sentences are last year's, word for word. A new sentence has a 23% chance of being gone the next year, and the pandemic made companies add to their risk sections, not rewrite them.</p>
+      <p class="meta"><span>2026</span><span>Python, sentence embeddings, Bayesian survival models, difference-in-differences</span></p>
+      <p class="links"><a href="https://jlattanzi4.github.io/sec-risk-classifier/report.html">Read the report</a><a href="https://github.com/jlattanzi4/sec-risk-classifier">Code</a></p>
+    </div>
+    <a class="shot" href="https://jlattanzi4.github.io/sec-risk-classifier/report.html" tabindex="-1" aria-hidden="true"><img src="images/sec-risk-classifier.jpg" width="960" height="640" alt="" decoding="async" loading="lazy"></a>
+  </article>
+
+  <article class="project">
+    <div>
+      <h3><a href="https://box-box-f1.vercel.app/">Box Box</a></h3>
+      <p>Fantasy F1 for a group chat. One pick a race, every driver once a season, scored automatically from the real race results. Private leagues, picks that lock at lights out, and reminder emails before each race.</p>
+      <p class="meta"><span>2026</span><span>Next.js, TypeScript, Prisma, Postgres</span></p>
+      <p class="links"><a href="https://box-box-f1.vercel.app/">Play</a><a href="https://github.com/jlattanzi4/box-box">Code</a></p>
+    </div>
+    <a class="shot" href="https://box-box-f1.vercel.app/" tabindex="-1" aria-hidden="true"><img src="images/box-box.jpg" width="960" height="640" alt="" decoding="async" loading="lazy"></a>
+  </article>
+</section>
+
+<section aria-labelledby="earlier-h">
+  <h2 id="earlier-h">Earlier</h2>
+  <article class="earlier">
+    <h3><a href="https://github.com/jlattanzi4/icu-readmission-prediction">Who comes back? Predicting 30-day hospital readmission</a></h3>
+    <p>My MS thesis: 545,316 hospital admissions from MIMIC-IV, models validated on later admissions than they were trained on, and an audit of how the best one treats patients of different races. A year later I reviewed it the way I'd review someone else's work.</p>
+    <p class="meta"><span>2025</span><span>R, XGBoost</span></p>
+      <p class="links"><a href="https://github.com/jlattanzi4/icu-readmission-prediction">Read the thesis and review</a><a href="https://youtu.be/Le1AnfCN2xI">Watch the defense</a></p>
+  </article>
+</section>
+
+<section class="about" aria-labelledby="about-h">
+  <h2 id="about-h">About</h2>
+  <p>By day I work on product analytics and experimentation at Klaviyo.</p>
+  <p>Outside work I build things I'd want to use myself, usually where sports, markets and public data meet. I care most about framing the question well, being honest about uncertainty, and shipping something that holds up when people use it.</p>
+  <p class="toolkit"><b>Languages:</b> Python, SQL, R, TypeScript. <b>Methods:</b> experimentation and causal inference, forecasting, optimization, NLP. <b>Building:</b> data pipelines, web apps, LLM-powered tools.</p>
+</section>
+</main>
+
+<footer>
+  <p>Joseph Lattanzi, 2026. <a href="mailto:lattanzi.joseph@gmail.com">lattanzi.joseph@gmail.com</a></p>
+</footer>
+
+</div>
+</body>
 </html>

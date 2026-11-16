@@ -1,23 +1,11 @@
-# Joseph Lattanzi - Portfolio
+# jlattanzi4.github.io
 
-Personal portfolio website built with Jekyll and hosted on GitHub Pages.
+Joseph Lattanzi's portfolio: https://jlattanzi4.github.io/
 
-## Local Development
+One static page, `index.html`, with its styles inline and no build step. Previews of each project live in `images/` as 960×640 JPEGs (3:2) captured from the live projects. GitHub Pages serves the `main` branch.
 
-To run locally:
+To look at it locally:
+
 ```bash
-bundle exec jekyll serve
+python3 -m http.server 8000   # then open http://localhost:8000
 ```
-
-Visit `http://localhost:4000`
-
-## Updating Content
-
-- **Home page**: Edit `index.md`
-- **Projects**: Edit `projects.md`
-- **About**: Edit `about.md`
-- **Contact info**: Update `_config.yml`
-
-## Adding New Projects
-
-Add new project sections to `projects.md` following the existing format.
