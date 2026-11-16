@@ -4,198 +4,186 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Joseph Lattanzi</title>
-<meta name="description" content="Joseph Lattanzi, data scientist. Projects: an NFL survivor-pool optimizer, a study of boilerplate in 47,643 SEC risk disclosures, and a fantasy F1 game scored from live race data.">
+<meta name="description" content="Joseph Lattanzi, data scientist. A desk of projects: an NFL survivor-pool optimizer, a study of boilerplate in 47,643 SEC risk disclosures, a fantasy F1 game, and a readmission thesis.">
 <meta name="author" content="Joseph Lattanzi">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Joseph Lattanzi">
-<meta property="og:description" content="Data scientist. I take a question I care about, measure it carefully, and ship the answer as something people can use.">
+<meta property="og:description" content="Data scientist who measures messy things and ships the answers. Pick up a project and turn it over.">
 <meta property="og:url" content="https://jlattanzi4.github.io/">
 <meta property="og:image" content="https://jlattanzi4.github.io/images/og.jpg">
-<meta property="og:image:alt" content="Joseph Lattanzi's portfolio: three projects, each shown with its real output.">
+<meta property="og:image:alt" content="A cutting mat with a marked-up SEC filing, an NFL pick sheet, an F1 race ticket and a thesis lying on it.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://jlattanzi4.github.io/">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
-<style>
-:root {
-  color-scheme: light;
-  --paper: #ffffff;
-  --ink: #1c1e21;
-  --ink-2: #5b6068;
-  --rule: #e4e6e9;
-  --soft: #b4b9c0;
-  --focus: #2a78d6;
-  --serif: "Source Serif 4", Georgia, serif;
-  --sans: "Public Sans", system-ui, sans-serif;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --paper: #1a1a19;
-    --ink: #f0efec;
-    --ink-2: #b4b3ad;
-    --rule: #34342f;
-    --soft: #6b6a64;
-    --focus: #3987e5;
-  }
-}
-
-* { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font: 400 1.125rem/1.6 var(--serif);
-  font-optical-sizing: auto;
-}
-a { color: inherit; text-decoration-color: var(--soft); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
-a:hover { text-decoration-color: currentColor; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
-
-.page { max-width: 62rem; margin: 0 auto; padding: 0 1.5rem 5rem; }
-
-/* Name and the three ways to reach me. */
-.top {
-  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 0.5rem 1.5rem;
-  padding: 1.75rem 0 0;
-}
-.top h1 { margin: 0; font: 600 1.0625rem/1.3 var(--serif); }
-.top h1 a { text-decoration: none; }
-.top nav { display: flex; gap: 1.25rem; font: 400 0.875rem/1.3 var(--sans); color: var(--ink-2); }
-.top nav a { text-decoration: none; }
-.top nav a:hover { color: var(--ink); text-decoration: underline; }
-
-/* The one large thing on the page: what I do, in a sentence. */
-.intro {
-  max-width: 34rem; margin: 6rem 0 0;
-  font: 400 clamp(1.5rem, 3.6vw, 2rem)/1.3 var(--serif); letter-spacing: -0.01em;
-}
-
-h2 {
-  margin: 4.5rem 0 0; padding-bottom: 0.75rem; border-bottom: 1px solid var(--rule);
-  font: 500 0.875rem/1.3 var(--sans); color: var(--ink-2);
-}
-
-/* A project: what it is and what it found, beside its real output. */
-.project {
-  display: grid; grid-template-columns: minmax(0, 1fr) 27rem; gap: 2.75rem;
-  padding: 2.25rem 0; border-bottom: 1px solid var(--rule);
-}
-.project h3 { margin: 0 0 0.4rem; font: 600 1.3125rem/1.3 var(--serif); letter-spacing: -0.005em; }
-.project h3 a { text-decoration: none; }
-.project h3 a:hover { text-decoration: underline; text-decoration-color: var(--soft); }
-.project p { margin: 0; max-width: 34rem; }
-/* Year and tools on one line, the year in a fixed column so a long list wraps under itself. */
-.page .meta {
-  display: grid; grid-template-columns: 3rem minmax(0, 1fr); margin-top: 1rem;
-  font: 400 0.875rem/1.5 var(--sans); color: var(--ink-2);
-}
-.page .links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-top: 0.6rem; font: 500 0.9375rem/1.5 var(--sans); }
-.shot { display: block; align-self: start; margin-top: 0.3rem; }
-.shot img {
-  display: block; width: 100%; height: auto; aspect-ratio: 3 / 2;
-  border: 1px solid var(--rule); border-radius: 6px;
-}
-.shot:hover img { border-color: var(--soft); }
-
-.earlier { padding: 1.5rem 0; border-bottom: 1px solid var(--rule); }
-.earlier h3 { margin: 0 0 0.4rem; font: 600 1.125rem/1.3 var(--serif); }
-.earlier h3 a { text-decoration: none; }
-.earlier h3 a:hover { text-decoration: underline; text-decoration-color: var(--soft); }
-.earlier p { margin: 0; max-width: 34rem; }
-
-.about p { max-width: 34rem; margin: 1.5rem 0 0; }
-.about .toolkit { font: 400 0.9375rem/1.6 var(--sans); color: var(--ink-2); }
-.about .toolkit b { font-weight: 600; color: var(--ink); }
-
-footer {
-  margin-top: 5rem; padding-top: 1rem; border-top: 1px solid var(--rule);
-  font: 400 0.8125rem/1.5 var(--sans); color: var(--ink-2);
-}
-
-@media (max-width: 720px) {
-  body { font-size: 1.0625rem; }
-  .intro { margin-top: 3.5rem; }
-  h2 { margin-top: 3.5rem; }
-  .project { grid-template-columns: 1fr; gap: 1.25rem; }
-  .shot { order: 2; margin-top: 0; }
-}
-</style>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="desk.css">
+<script type="module" src="desk.js"></script>
 </head>
 <body>
-<div class="page">
-
-<header class="top">
-  <h1><a href="/">Joseph Lattanzi</a></h1>
-  <nav aria-label="Contact">
-    <a href="https://github.com/jlattanzi4">GitHub</a>
-    <a href="https://www.linkedin.com/in/joseph-lattanzi/">LinkedIn</a>
-    <a href="mailto:lattanzi.joseph@gmail.com">Email</a>
-  </nav>
-</header>
+<a class="skip" href="#list">Skip to the list of work</a>
 
 <main>
-<p class="intro">Data scientist. I take a question I care about, measure it carefully, and ship the answer as something people can use.</p>
+<!-- The desk: a cutting mat, measured along its edges, with the work lying on it. -->
+<section class="mat" id="mat" aria-labelledby="name">
+  <div class="ruler ruler-x" aria-hidden="true"><div class="band"></div></div>
+  <div class="ruler ruler-y" aria-hidden="true"><div class="band"></div></div>
 
-<section aria-labelledby="work-h">
-  <h2 id="work-h">Selected work</h2>
+  <div class="tools">
+    <button type="button" class="tidy" id="tidy">Tidy up</button>
+    <a href="#list">See it as a list</a>
+  </div>
 
-  <article class="project">
-    <div>
+  <h1 class="headline" id="name">
+    <span>Joseph Lattanzi</span>
+    <span class="in">is a data scientist</span>
+    <span>who measures messy things</span>
+    <span class="in">and ships the answers.</span>
+  </h1>
+  <p class="hint" id="hint">Drag anything around. Click a piece to turn it over.</p>
+  <p class="sr-only" id="keys">Each piece on the desk can be turned over with Enter, moved with the arrow keys, and put back with Escape.</p>
+
+  <!-- The filing: Kellogg's risk section for fiscal 2019, marked up against 2018's. -->
+  <article class="obj filing" data-id="filing" data-name="Risk section, Kellogg, fiscal 2019" aria-labelledby="filing-h" aria-describedby="keys">
+    <div class="lift"><div class="card">
+      <div class="face front">
+        <p class="doc-head">Kellogg Co, Form 10-K for fiscal 2019</p>
+        <h2 class="doc-title" id="filing-h">Item 1A. Risk factors</h2>
+        <div class="doc-body">
+          <p>Future acquisitions could also result in potentially dilutive issuances of equity securities, the incurrence of debt, contingent liabilities and/or amortization expenses related to certain intangible assets and increased operating expenses, which could adversely affect our results of operations and financial condition.</p>
+          <p><del>The proposed divestiture of our cookies and fruit snacks businesses is subject to various risks and uncertainties, and may not be completed on the terms or timeline currently contemplated, if at all.</del> <del>On November 12, 2018, we announced our intention to explore a sale of our cookies business (including the Keebler, Famous Amos, Mother’s and Murray brands), fruit snacks business (including the Stretch Island brand), and our pie crust and ice cream cone businesses.</del></p>
+          <p><ins>The divestiture (the “Divestiture”) of selected cookie, fruit and fruit-flavored snacks, pie crusts, and ice cream cone businesses, consummated on July 28, 2019 (the “Divested Business”) may not achieve some or all of the anticipated benefits, the Divestiture may adversely affect our business, and there are execution risks associated with our continued provision of transition services to the Divested Business.</ins></p>
+          <p>We may not realize the benefits we expect from revenue growth management. We are utilizing formal revenue growth management practices to help us realize price in a more effective way.</p>
+        </div>
+        <p class="sticky">73% of these sentences are last year’s, word for word.</p>
+      </div>
+      <div class="face back">
+        <h3>How much of a risk disclosure is boilerplate?</h3>
+        <p class="redline" id="redline"></p>
+        <p>47,643 risk sections from SEC annual reports, each compared sentence by sentence with the same company’s section a year earlier. 73% of sentences are last year’s, word for word, and a new one has a 23% chance of being gone the next year.</p>
+        <p class="go"><a href="https://jlattanzi4.github.io/sec-risk-classifier/report.html">Read the report</a><a href="https://github.com/jlattanzi4/sec-risk-classifier">Code</a></p>
+      </div>
+    </div></div>
+  </article>
+
+  <!-- The pick sheet: this week's call from the optimizer, computed live in the browser. -->
+  <article class="obj pick" data-id="pick" data-name="Pick sheet, this week" aria-labelledby="pick-h" aria-describedby="keys">
+    <div class="lift"><div class="card">
+      <div class="face front">
+        <p class="pick-top"><span>Survivor</span><span id="pick-week">This week</span></p>
+        <h2 class="sr-only" id="pick-h">NFL Survivor Optimizer</h2>
+        <p class="pick-label">The call for a fresh entry in a pool of 50</p>
+        <p class="pick-team"><i class="dot" id="pick-dot"></i><span id="pick-name">Simulating</span></p>
+        <p class="pick-game" id="pick-game">20,000 seasons, in your browser</p>
+        <ol class="pick-path" id="pick-path" aria-label="The rest of the season"></ol>
+        <dl class="pick-stats">
+          <div><dt>Win this week</dt><dd id="pick-win">–</dd></div>
+          <div><dt>Public on it</dt><dd id="pick-public">–</dd></div>
+          <div><dt>Pool equity</dt><dd id="pick-equity">–</dd></div>
+        </dl>
+        <p class="pick-foot" id="pick-foot">Lines from live betting markets</p>
+      </div>
+      <div class="face back">
+        <h3>NFL Survivor Optimizer</h3>
+        <p>Which team to pick each week of a survivor pool. It finds the best path through the season exactly, as an assignment problem, and prices each pick against the rest of the pool with 20,000 simulated seasons.</p>
+        <figure class="curve">
+          <svg id="pick-curve" viewBox="0 0 240 84" aria-hidden="true"></svg>
+          <figcaption id="pick-curve-cap">Chance the entry is still alive, week by week</figcaption>
+        </figure>
+        <p class="go"><a href="https://jlattanzi4.github.io/nfl-survivor-optimizer/">Open the optimizer</a><a href="https://github.com/jlattanzi4/nfl-survivor-optimizer">Code</a></p>
+      </div>
+    </div></div>
+  </article>
+
+  <!-- The ticket: Box Box, with the start lights on the back. -->
+  <article class="obj ticket" data-id="ticket" data-name="Ticket, Box Box" aria-labelledby="ticket-h" aria-describedby="keys">
+    <div class="lift"><div class="card">
+      <div class="face front">
+        <div class="stub-main">
+          <h2 class="tk-title" id="ticket-h">Box <b>Box</b></h2>
+          <p class="tk-sub">Fantasy F1 for your group chat</p>
+          <p class="tk-meta">Season 2026<br>One pick a race, every driver once</p>
+        </div>
+        <div class="stub-side" aria-hidden="true">
+          <p>Admit<br>one<br>group<br>chat</p>
+          <i class="barcode"></i>
+        </div>
+      </div>
+      <div class="face back">
+        <button type="button" class="gantry" id="gantry" aria-describedby="lights-read">
+          <span class="sr-only">Start the lights</span>
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </button>
+        <div class="tk-text">
+          <h3>Box Box</h3>
+          <p class="readout" id="lights-read" aria-live="polite">Press the lights. When they go out, press again.</p>
+          <p class="go"><a href="https://box-box-f1.vercel.app/">Play</a><a href="https://github.com/jlattanzi4/box-box">Code</a></p>
+        </div>
+      </div>
+    </div></div>
+  </article>
+
+  <!-- The thesis: a bound report. -->
+  <article class="obj thesis" data-id="thesis" data-name="Thesis, 2025" aria-labelledby="thesis-h" aria-describedby="keys">
+    <div class="lift"><div class="card">
+      <div class="face front">
+        <p class="th-kicker">Master’s capstone, Applied Data Science</p>
+        <h2 class="th-title" id="thesis-h">Who comes back?</h2>
+        <p class="th-sub">Predicting 30-day hospital readmission</p>
+        <p class="th-by">Joseph Lattanzi<br>Bay Path University, 2025</p>
+      </div>
+      <div class="face back">
+        <h3>Who comes back?</h3>
+        <p>545,316 hospital admissions from MIMIC-IV. Models trained on earlier admissions and tested on later ones, and an audit of how the best model treats patients of different races.</p>
+        <p class="go"><a href="https://github.com/jlattanzi4/icu-readmission-prediction">Read the thesis</a><a href="https://youtu.be/Le1AnfCN2xI">Watch the defense</a></p>
+      </div>
+    </div></div>
+  </article>
+
+  <!-- The business card. -->
+  <article class="obj bizcard" data-id="card" data-name="Card" aria-labelledby="card-h" aria-describedby="keys">
+    <div class="lift"><div class="card">
+      <div class="face front">
+        <h2 class="bc-name" id="card-h">Joseph Lattanzi</h2>
+        <p class="bc-role">Data scientist</p>
+        <p class="bc-mail">lattanzi.joseph@gmail.com</p>
+      </div>
+      <div class="face back">
+        <p>By day, product analytics and experimentation at Klaviyo. After hours, things I’d want to use myself, where sports, markets and public data meet.</p>
+        <p class="go"><a href="mailto:lattanzi.joseph@gmail.com">Email</a><a href="https://github.com/jlattanzi4">GitHub</a><a href="https://www.linkedin.com/in/joseph-lattanzi/">LinkedIn</a></p>
+      </div>
+    </div></div>
+  </article>
+</section>
+
+<!-- The same work, for a reader in a hurry. -->
+<section class="list" id="list" aria-labelledby="list-h">
+  <h2 id="list-h">The same work, as a list</h2>
+  <ol>
+    <li>
       <h3><a href="https://jlattanzi4.github.io/nfl-survivor-optimizer/">NFL Survivor Optimizer</a></h3>
-      <p>Which team to pick each week of a survivor pool. It finds the best path through the season exactly, as an assignment problem, and prices each pick against the rest of the pool with 20,000 simulated seasons. Lines come from live betting markets and refresh every four hours.</p>
-      <p class="meta"><span>2026</span><span>Python, JavaScript, Hungarian algorithm, Monte Carlo</span></p>
-      <p class="links"><a href="https://jlattanzi4.github.io/nfl-survivor-optimizer/">Open the optimizer</a><a href="https://github.com/jlattanzi4/nfl-survivor-optimizer">Code</a></p>
-    </div>
-    <a class="shot" href="https://jlattanzi4.github.io/nfl-survivor-optimizer/" tabindex="-1" aria-hidden="true"><img src="images/nfl-survivor-optimizer.jpg" width="960" height="640" alt="" decoding="async"></a>
-  </article>
-
-  <article class="project">
-    <div>
+      <p>Which team to pick each week of a survivor pool: the best path through the season, solved exactly, priced against 20,000 simulated seasons from live betting lines.</p>
+      <p class="meta">2026. Python, JavaScript. <a href="https://github.com/jlattanzi4/nfl-survivor-optimizer">Code</a></p>
+    </li>
+    <li>
       <h3><a href="https://jlattanzi4.github.io/sec-risk-classifier/report.html">How much of a risk disclosure is boilerplate?</a></h3>
-      <p>47,643 risk sections from SEC annual reports, each compared sentence by sentence with the same company's section a year earlier. 73% of sentences are last year's, word for word. A new sentence has a 23% chance of being gone the next year, and the pandemic made companies add to their risk sections, not rewrite them.</p>
-      <p class="meta"><span>2026</span><span>Python, sentence embeddings, Bayesian survival models, difference-in-differences</span></p>
-      <p class="links"><a href="https://jlattanzi4.github.io/sec-risk-classifier/report.html">Read the report</a><a href="https://github.com/jlattanzi4/sec-risk-classifier">Code</a></p>
-    </div>
-    <a class="shot" href="https://jlattanzi4.github.io/sec-risk-classifier/report.html" tabindex="-1" aria-hidden="true"><img src="images/sec-risk-classifier.jpg" width="960" height="640" alt="" decoding="async" loading="lazy"></a>
-  </article>
-
-  <article class="project">
-    <div>
+      <p>47,643 SEC risk sections compared sentence by sentence with the year before. 73% of sentences are last year’s, word for word.</p>
+      <p class="meta">2026. Python, sentence embeddings, Bayesian survival models, difference-in-differences. <a href="https://github.com/jlattanzi4/sec-risk-classifier">Code</a></p>
+    </li>
+    <li>
       <h3><a href="https://box-box-f1.vercel.app/">Box Box</a></h3>
-      <p>Fantasy F1 for a group chat. One pick a race, every driver once a season, scored automatically from the real race results. Private leagues, picks that lock at lights out, and reminder emails before each race.</p>
-      <p class="meta"><span>2026</span><span>Next.js, TypeScript, Prisma, Postgres</span></p>
-      <p class="links"><a href="https://box-box-f1.vercel.app/">Play</a><a href="https://github.com/jlattanzi4/box-box">Code</a></p>
-    </div>
-    <a class="shot" href="https://box-box-f1.vercel.app/" tabindex="-1" aria-hidden="true"><img src="images/box-box.jpg" width="960" height="640" alt="" decoding="async" loading="lazy"></a>
-  </article>
-</section>
-
-<section aria-labelledby="earlier-h">
-  <h2 id="earlier-h">Earlier</h2>
-  <article class="earlier">
-    <h3><a href="https://github.com/jlattanzi4/icu-readmission-prediction">Who comes back? Predicting 30-day hospital readmission</a></h3>
-    <p>My MS thesis: 545,316 hospital admissions from MIMIC-IV, models validated on later admissions than they were trained on, and an audit of how the best one treats patients of different races. A year later I reviewed it the way I'd review someone else's work.</p>
-    <p class="meta"><span>2025</span><span>R, XGBoost</span></p>
-      <p class="links"><a href="https://github.com/jlattanzi4/icu-readmission-prediction">Read the thesis and review</a><a href="https://youtu.be/Le1AnfCN2xI">Watch the defense</a></p>
-  </article>
-</section>
-
-<section class="about" aria-labelledby="about-h">
-  <h2 id="about-h">About</h2>
-  <p>By day I work on product analytics and experimentation at Klaviyo.</p>
-  <p>Outside work I build things I'd want to use myself, usually where sports, markets and public data meet. I care most about framing the question well, being honest about uncertainty, and shipping something that holds up when people use it.</p>
-  <p class="toolkit"><b>Languages:</b> Python, SQL, R, TypeScript. <b>Methods:</b> experimentation and causal inference, forecasting, optimization, NLP. <b>Building:</b> data pipelines, web apps, LLM-powered tools.</p>
+      <p>Fantasy F1 for a group chat: one pick a race, every driver once, scored automatically from the real results.</p>
+      <p class="meta">2026. Next.js, TypeScript, Prisma, Postgres. <a href="https://github.com/jlattanzi4/box-box">Code</a></p>
+    </li>
+    <li>
+      <h3><a href="https://github.com/jlattanzi4/icu-readmission-prediction">Who comes back? Predicting 30-day hospital readmission</a></h3>
+      <p>Master’s capstone on 545,316 MIMIC-IV admissions, with a time-ordered split and a fairness audit.</p>
+      <p class="meta">2025. R, XGBoost. <a href="https://youtu.be/Le1AnfCN2xI">Watch the defense</a></p>
+    </li>
+  </ol>
+  <p class="contact"><a href="mailto:lattanzi.joseph@gmail.com">lattanzi.joseph@gmail.com</a> <a href="https://github.com/jlattanzi4">GitHub</a> <a href="https://www.linkedin.com/in/joseph-lattanzi/">LinkedIn</a></p>
 </section>
 </main>
-
-<footer>
-  <p>Joseph Lattanzi, 2026. <a href="mailto:lattanzi.joseph@gmail.com">lattanzi.joseph@gmail.com</a></p>
-</footer>
-
-</div>
 </body>
 </html>
