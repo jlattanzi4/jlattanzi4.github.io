@@ -1,0 +1,105 @@
+{
+  "profile": "https://www.goodreads.com/user/show/164485726-joseph-lattanzi",
+  "reading": [
+    {
+      "id": "256008",
+      "title": "Lonesome Dove",
+      "series": "Lonesome Dove, #1",
+      "author": "Larry McMurtry",
+      "url": "https://www.goodreads.com/book/show/256008.Lonesome_Dove",
+      "page": 230,
+      "pages": 960,
+      "percent": 0.24,
+      "updated": "2026-09-08",
+      "cover": "reading/covers/256008.jpg"
+    }
+  ],
+  "favorites": [
+    {
+      "id": "29044",
+      "title": "The Secret History",
+      "series": null,
+      "author": "Donna Tartt",
+      "url": "https://www.goodreads.com/book/show/29044.The_Secret_History",
+      "cover": "reading/covers/29044.jpg"
+    },
+    {
+      "id": "166997",
+      "title": "Stoner",
+      "series": null,
+      "author": "John Williams",
+      "url": "https://www.goodreads.com/book/show/166997.Stoner",
+      "cover": "reading/covers/166997.jpg"
+    },
+    {
+      "id": "10644930",
+      "title": "11/22/63",
+      "series": null,
+      "author": "Stephen King",
+      "url": "https://www.goodreads.com/book/show/10644930-11-22-63",
+      "cover": "reading/covers/10644930.jpg"
+    },
+    {
+      "id": "15839976",
+      "title": "Red Rising",
+      "series": null,
+      "author": "Pierce Brown",
+      "url": "https://www.goodreads.com/book/show/15839976-red-rising",
+      "cover": "reading/covers/15839976.jpg"
+    },
+    {
+      "id": "18966806",
+      "title": "Morning Star",
+      "series": null,
+      "author": "Pierce Brown",
+      "url": "https://www.goodreads.com/book/show/18966806-morning-star",
+      "cover": "reading/covers/18966806.jpg"
+    },
+    {
+      "id": "18966819",
+      "title": "Golden Son",
+      "series": null,
+      "author": "Pierce Brown",
+      "url": "https://www.goodreads.com/book/show/18966819-golden-son",
+      "cover": "reading/covers/18966819.jpg"
+    },
+    {
+      "id": "38799469",
+      "title": "Bad Blood",
+      "series": null,
+      "author": "John Carreyrou",
+      "url": "https://www.goodreads.com/book/show/38799469-bad-blood",
+      "cover": "reading/covers/38799469.jpg"
+    },
+    {
+      "id": "54659324",
+      "title": "Dungeon Crawler Carl",
+      "series": null,
+      "author": "Matt Dinniman",
+      "url": "https://www.goodreads.com/book/show/54659324-dungeon-crawler-carl",
+      "cover": "reading/covers/54659324.jpg"
+    },
+    {
+      "id": "54493401",
+      "title": "Project Hail Mary",
+      "series": null,
+      "author": "Andy Weir",
+      "url": "https://www.goodreads.com/book/show/54493401-project-hail-mary",
+      "cover": "reading/covers/54493401.jpg"
+    },
+    {
+      "id": "58784475",
+      "title": "Tomorrow, and Tomorrow, and Tomorrow",
+      "series": null,
+      "author": "Gabrielle Zevin",
+      "url": "https://www.goodreads.com/book/show/58784475-tomorrow-and-tomorrow-and-tomorrow",
+      "cover": "reading/covers/58784475.jpg"
+    }
+  ],
+  "shelves": {
+    "to-read": 57,
+    "currently-reading": 1,
+    "read": 41,
+    "did-not-finish": 0
+  }
+}
