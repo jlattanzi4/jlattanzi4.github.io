@@ -24,7 +24,7 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .skip:focus { top: 8px; }
 
 /* -------------------------------------------------------------- the room */
-.room { position: relative; height: 100vh; height: 100svh; min-height: 540px; overflow: hidden; background: #1b1d1f; }
+.room { position: relative; height: 100vh; height: 100svh; min-height: 540px; overflow: hidden; background: #050505; }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: pan-y; opacity: 0; transition: opacity 0.8s ease; }
 .room.ready #scene { opacity: 1; }
 .loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; font: 500 15px/1 var(--sans); color: #b8bab6; transition: opacity 0.4s; pointer-events: none; }
@@ -64,7 +64,26 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .back { left: 16px; top: 16px; z-index: 9; border: 0; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 .back[hidden] { display: none; }
 .back kbd { padding: 2px 5px; border-radius: 4px; background: rgba(255, 255, 255, 0.16); font: 500 11px/1 var(--sans); }
-.room.leaning .to-list { display: none; }
+.room.leaning .to-list, .room.leaning .hint { display: none; }
+
+/* A closer look at one object: a caption and what you can do with it. */
+.inspect {
+  position: absolute; z-index: 7; left: 50%; bottom: 22px; translate: -50% 0; width: min(560px, calc(100% - 32px));
+  display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; border-radius: 14px;
+  background: rgba(16, 16, 18, 0.72); color: #fff; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); animation: inspect-in 0.3s ease;
+}
+.inspect[hidden] { display: none; }
+@keyframes inspect-in { from { opacity: 0; translate: -50% 8px; } }
+.inspect-cap { margin: 0; font: 400 14px/1.45 var(--sans); color: rgba(255, 255, 255, 0.78); }
+.inspect-cap b { font-weight: 600; color: #fff; margin-right: 4px; }
+.inspect-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.inspect-actions button {
+  padding: 8px 14px; border: 0; border-radius: 999px; background: rgba(255, 255, 255, 0.14); color: #fff;
+  font: 500 13px/1 var(--sans); cursor: pointer; transition: background 0.15s;
+}
+.inspect-actions button:hover { background: rgba(255, 255, 255, 0.24); }
+.inspect-actions button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 /* ------------------------------------------------- the computer's desktop */
 .screen { position: absolute; inset: 0; z-index: 8; opacity: 0; transition: opacity 0.35s ease; }
@@ -72,11 +91,10 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .screen[hidden] { display: none; }
 .os {
   position: absolute; width: 1280px; height: 720px; transform-origin: 0 0; overflow: hidden;
-  background: linear-gradient(135deg, #14233a 0%, #2c5274 55%, #86a6b9 100%);
-  color: #fff; font-family: var(--sans); border-radius: 2px;
+  background: #0f1a2b; color: #fff; font-family: var(--sans); border-radius: 2px;
 }
-.os::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 78% 22%, rgba(255, 214, 170, 0.35), transparent 60%); pointer-events: none; }
-.menubar { position: relative; display: flex; align-items: center; gap: 22px; height: 30px; padding: 0 20px; background: rgba(10, 16, 26, 0.35); font: 400 15px/1 var(--sans); color: rgba(255, 255, 255, 0.75); }
+.os .wallpaper { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.menubar { position: relative; display: flex; align-items: center; gap: 22px; height: 30px; padding: 0 20px; background: rgba(4, 8, 14, 0.4); font: 400 15px/1 var(--sans); color: rgba(255, 255, 255, 0.75); }
 .menubar b { color: #fff; font-weight: 600; }
 .menubar time { margin-left: auto; color: #fff; }
 .hello { position: absolute; left: 84px; top: 180px; }
@@ -87,7 +105,7 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .dock {
   position: absolute; left: 50%; bottom: 20px; translate: -50% 0;
   display: flex; gap: 20px; padding: 13px 20px; border-radius: 26px;
-  background: rgba(255, 255, 255, 0.18); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
   -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
 }
 .dock button { position: relative; width: 76px; height: 76px; padding: 0; border: 0; background: none; cursor: pointer; transition: translate 0.2s cubic-bezier(0.3, 1.4, 0.5, 1); }
@@ -156,6 +174,25 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .readout { min-height: 3.2em; color: #b6b8bf; }
 .readout b { display: block; font: 700 46px/1 var(--cond); color: #fff; }
 
+.r-now { display: grid; grid-template-columns: 128px 1fr; gap: 26px; align-items: center; padding-bottom: 22px; border-bottom: 1px solid #e6e6e3; }
+.r-now[hidden] { display: none; }
+.r-cover { display: block; width: 128px; height: auto; border-radius: 2px 4px 4px 2px; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28), inset 3px 0 0 rgba(0, 0, 0, 0.18); background: #ddd; }
+.r-label { margin: 0 0 6px !important; font: 500 14px/1.3 var(--sans); color: #6b6f75; }
+.w-reading h4 { margin: 0; font: 600 34px/1.1 var(--serif); }
+.w-reading h4 a { color: #1c1e21; text-decoration: none; }
+.w-reading h4 a:hover { text-decoration: underline; }
+.r-author { margin: 6px 0 16px !important; font: italic 400 19px/1.3 var(--serif); color: #45484d; }
+.r-bar { height: 6px; border-radius: 3px; background: #e7e4dc; overflow: hidden; max-width: 360px; }
+.r-bar i { display: block; height: 100%; width: 0; background: #e4572e; border-radius: 3px; }
+.r-progress { margin: 8px 0 0 !important; font: 400 14px/1.4 var(--sans); color: #5e6166; }
+.r-fav-h { margin: 20px 0 10px !important; font: 600 15px/1.3 var(--sans); }
+.r-fav-h[hidden] { display: none; }
+.r-favs { display: grid; grid-template-columns: repeat(10, 1fr); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.r-favs a { display: block; border-radius: 2px; transition: translate 0.18s ease; }
+.r-favs a:hover, .r-favs a:focus-visible { translate: 0 -4px; }
+.r-favs img { display: block; width: 100%; aspect-ratio: 2 / 3; object-fit: cover; border-radius: 2px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22); background: #ddd; }
+.r-counts { margin: 14px 0 0 !important; font: 400 14px/1.4 var(--sans); color: #5e6166; }
+
 /* On a phone the screen is too small to read, so the desktop takes the whole view. */
 .screen.compact .os { position: fixed; inset: 0; width: auto; height: auto; transform: none !important; border-radius: 0; }
 .screen.compact .menubar { justify-content: flex-end; padding-right: 16px; height: 64px; padding-top: 6px; font-size: 13px; }
@@ -169,6 +206,10 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .screen.compact .win { left: 12px; right: 12px; top: 72px; bottom: 112px; width: auto; max-height: none; translate: none; }
 .screen.compact .w-nfl .win-body { grid-template-columns: 1fr; }
 .screen.compact .redline { font-size: 21px; }
+.screen.compact .r-now { grid-template-columns: 84px 1fr; gap: 16px; }
+.screen.compact .r-cover { width: 84px; }
+.screen.compact .w-reading h4 { font-size: 24px; }
+.screen.compact .r-favs { grid-template-columns: repeat(5, 1fr); }
 .screen.compact .win-body { font-size: 15.5px; padding: 20px; }
 
 /* -------------------------------------------------------------- the list */
@@ -186,7 +227,7 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .list .contact { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 32px; font: 500 14px/1.4 var(--sans); }
 
 @media (prefers-reduced-motion: reduce) {
-  #scene, .screen, .win, .dock button, .rl-del, .redline, .label, .hint { transition: none !important; animation: none !important; }
+  #scene, .screen, .win, .dock button, .rl-del, .redline, .label, .hint, .inspect, .r-favs a { transition: none !important; animation: none !important; }
 }
 
 @media (hover: none) { .dock button span { display: none; } }

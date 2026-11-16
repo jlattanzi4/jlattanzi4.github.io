@@ -13,6 +13,7 @@ export const APPS = [
   { id: "sec", name: "Boilerplate" },
   { id: "box", name: "Box Box" },
   { id: "thesis", name: "Thesis" },
+  { id: "reading", name: "Reading" },
   { id: "about", name: "About me" },
 ];
 
@@ -53,6 +54,16 @@ export function drawIcon(g, id, x, y, s) {
     g.fillStyle = "#141b2d"; g.fillRect(0, 0, 14, 100);
     g.fillStyle = "#e3cf93"; g.font = "600 52px 'Source Serif 4', serif"; g.textAlign = "center"; g.fillText("?", 56, 68);
   }
+  if (id === "reading") {
+    tile("#2a2017");
+    // An open book seen from above.
+    g.fillStyle = "#efe6d3";
+    g.beginPath(); g.moveTo(16, 34); g.quadraticCurveTo(33, 28, 49, 36); g.lineTo(49, 74); g.quadraticCurveTo(33, 66, 16, 72); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(84, 34); g.quadraticCurveTo(67, 28, 51, 36); g.lineTo(51, 74); g.quadraticCurveTo(67, 66, 84, 72); g.closePath(); g.fill();
+    g.fillStyle = "rgba(60, 50, 40, 0.45)";
+    for (let i = 0; i < 4; i++) { g.fillRect(22, 42 + i * 7, 22, 2.5); g.fillRect(56, 42 + i * 7, 22, 2.5); }
+    g.fillStyle = "#e4572e"; g.fillRect(60, 22, 7, 22);
+  }
   if (id === "about") {
     tile("#e9e7e1");
     g.fillStyle = "#161616"; g.font = "600 40px 'Instrument Sans', sans-serif"; g.textAlign = "center"; g.fillText("JL", 50, 64);
@@ -64,18 +75,52 @@ function clockText(d = new Date()) {
   return d.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" });
 }
 
+// The wallpaper: contour lines over a dark blue, like a topographic map of a ski area.
+// Drawn once, then shared by the screen seen from the chair and the desktop you lean in to.
+let wallpaper = null;
+export function wallpaperCanvas() {
+  if (wallpaper) return wallpaper;
+  const w = OS_W, h = OS_H;
+  wallpaper = document.createElement("canvas");
+  wallpaper.width = w; wallpaper.height = h;
+  const g = wallpaper.getContext("2d");
+  const peaks = [[0.72, 0.3, 0.2, 1], [0.86, 0.58, 0.14, 0.7], [0.55, 0.62, 0.16, 0.55], [0.3, 0.85, 0.22, 0.45], [0.95, 0.12, 0.12, 0.5], [0.12, 0.25, 0.18, 0.25]];
+  const field = new Float32Array(w * h);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const u = x / w, v = y / h * (h / w);
+    let e = 0;
+    for (const [px, py, s, a] of peaks) { const dx = u - px, dy = v - py * (h / w); e += a * Math.exp(-(dx * dx + dy * dy) / (2 * s * s)); }
+    e += 0.035 * Math.sin(u * 23 + Math.sin(v * 17) * 1.5) + 0.025 * Math.sin(v * 29 - u * 11);
+    field[y * w + x] = e * 26; // 26 contour intervals over the range
+  }
+  const img = g.createImageData(w, h);
+  const d = img.data;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x;
+    const t = (x / w) * 0.55 + (y / h) * 0.45;
+    // Base: deep navy toward slate.
+    let r = 11 + t * 12, gr = 18 + t * 20, b = 31 + t * 30;
+    const e = field[i];
+    const gx = (field[i + (x < w - 1 ? 1 : 0)] - field[i - (x > 0 ? 1 : 0)]) / 2;
+    const gy = (field[i + (y < h - 1 ? w : 0)] - field[i - (y > 0 ? w : 0)]) / 2;
+    const grad = Math.hypot(gx, gy) + 1e-4;
+    const dist = Math.abs(e - Math.round(e)) / grad; // pixels to the nearest contour
+    const index = Math.round(e) % 5 === 0;
+    const a = Math.max(0, 1 - dist / (index ? 1.1 : 0.7)) * (index ? 0.34 : 0.17);
+    r += (150 - r) * a; gr += (190 - gr) * a; b += (215 - b) * a;
+    d[i * 4] = r; d[i * 4 + 1] = gr; d[i * 4 + 2] = b; d[i * 4 + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  return wallpaper;
+}
+
 // What the screen shows from the chair: wallpaper, the name, and the dock.
-export function paintIdle(canvas, night) {
+export function paintIdle(canvas) {
   const g = canvas.getContext("2d");
   const w = OS_W, h = OS_H;
-  const bg = g.createLinearGradient(0, 0, w, h);
-  bg.addColorStop(0, "#14233a"); bg.addColorStop(0.55, "#2c5274"); bg.addColorStop(1, "#86a6b9");
-  g.fillStyle = bg; g.fillRect(0, 0, w, h);
-  const glow = g.createRadialGradient(w * 0.78, h * 0.22, 10, w * 0.78, h * 0.22, w * 0.6);
-  glow.addColorStop(0, "rgba(255, 214, 170, 0.35)"); glow.addColorStop(1, "rgba(255, 214, 170, 0)");
-  g.fillStyle = glow; g.fillRect(0, 0, w, h);
+  g.drawImage(wallpaperCanvas(), 0, 0);
   // menu bar
-  g.fillStyle = "rgba(10, 16, 26, 0.35)"; g.fillRect(0, 0, w, 30);
+  g.fillStyle = "rgba(4, 8, 14, 0.4)"; g.fillRect(0, 0, w, 30);
   g.fillStyle = "#fff"; g.font = "600 15px 'Instrument Sans', sans-serif"; g.textBaseline = "middle";
   g.fillText("Joseph Lattanzi", 20, 15);
   g.fillStyle = "rgba(255,255,255,0.75)"; g.font = "400 15px 'Instrument Sans', sans-serif";
@@ -92,10 +137,9 @@ export function paintIdle(canvas, night) {
   // the dock
   const n = APPS.length, s = 76, gap = 20, dw = n * s + (n - 1) * gap + 40;
   const dx = (w - dw) / 2, dy = h - s - 46;
-  rounded(g, dx, dy, dw, s + 26, 26); g.fillStyle = "rgba(255,255,255,0.18)"; g.fill();
-  g.strokeStyle = "rgba(255,255,255,0.25)"; g.lineWidth = 1; g.stroke();
+  rounded(g, dx, dy, dw, s + 26, 26); g.fillStyle = "rgba(255,255,255,0.12)"; g.fill();
+  g.strokeStyle = "rgba(255,255,255,0.18)"; g.lineWidth = 1; g.stroke();
   APPS.forEach((a, i) => drawIcon(g, a.id, dx + 20 + i * (s + gap), dy + 13, s));
-  if (night) { g.fillStyle = "rgba(0,0,0,0.08)"; g.fillRect(0, 0, w, h); }
 }
 
 // ------------------------------------------------- live parts of the windows
@@ -234,10 +278,50 @@ function lightsGame(win) {
   return reset;
 }
 
+// What Joe is reading, from his Goodreads shelf.
+function fillReading(win, shelf) {
+  const data = shelf?.data;
+  const book = data?.reading?.[0];
+  const link = (href, child) => { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.append(child); return a; };
+  if (data) $(".r-shelf", win).href = data.profile;
+  if (!book) {
+    $(".r-now", win).hidden = true;
+  } else {
+    $(".r-now", win).hidden = false;
+    const cover = $(".r-cover", win);
+    if (book.cover) cover.src = book.cover;
+    cover.alt = `The cover of ${book.title}`;
+    $(".r-title", win).textContent = book.title;
+    $(".r-title", win).href = book.url;
+    $(".r-author", win).textContent = book.author || "";
+    const p = book.percent ?? 0;
+    $(".r-bar i", win).style.width = `${Math.round(p * 100)}%`;
+    $(".r-bar", win).setAttribute("aria-valuenow", String(Math.round(p * 100)));
+    const when = book.updated ? new Date(`${book.updated}T12:00:00`).toLocaleDateString("en-US", { month: "long", day: "numeric" }) : null;
+    const where = book.page && book.pages ? `Page ${book.page} of ${book.pages}` : `${Math.round(p * 100)}% of the way in`;
+    $(".r-progress", win).textContent = when ? `${where}, as of ${when}.` : `${where}.`;
+  }
+  const favs = data?.favorites || [];
+  $(".r-favs", win).replaceChildren(...favs.map((b) => {
+    const li = document.createElement("li");
+    const im = document.createElement("img");
+    im.src = b.cover || ""; im.alt = `${b.title}${b.author ? `, by ${b.author}` : ""}`; im.loading = "lazy";
+    li.append(link(b.url, im));
+    return li;
+  }));
+  $(".r-fav-h", win).hidden = !favs.length;
+  const shelves = data?.shelves;
+  $(".r-counts", win).textContent = shelves ? `${shelves.read} read, ${shelves["to-read"]} waiting on the to-read shelf.` : "";
+}
+
 // --------------------------------------------------------------- the desktop
-export function createScreen({ onLeave, reduce }) {
+export function createScreen({ onLeave, reduce, shelf }) {
   const screen = $("#screen");
   const os = $("#os", screen);
+  const paper = wallpaperCanvas();
+  paper.className = "wallpaper";
+  paper.setAttribute("aria-hidden", "true");
+  os.prepend(paper);
   const clock = $("#clock", screen);
   const tick = () => { clock.textContent = clockText(); };
   tick(); setInterval(tick, 20000);
@@ -262,6 +346,7 @@ export function createScreen({ onLeave, reduce }) {
     const win = $(`[data-win="${id}"]`, screen);
     if (id === "nfl") fillCall(win);
     if (id === "sec") playRedline($(".redline", win), reduce());
+    if (id === "reading") fillReading(win, shelf);
     if (win) requestAnimationFrame(() => $(".win-close", win)?.focus({ preventScroll: true }));
   }
   function closeApp() {
@@ -308,12 +393,14 @@ export function createScreen({ onLeave, reduce }) {
   };
 }
 
-export function screenTexture(night) {
+export function screenTexture() {
   const canvas = document.createElement("canvas");
   canvas.width = OS_W; canvas.height = OS_H;
-  paintIdle(canvas, night);
+  paintIdle(canvas);
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
-  return { tex, repaint(n) { paintIdle(canvas, n); tex.needsUpdate = true; } };
+  // Keep the menu-bar clock current.
+  setInterval(() => { paintIdle(canvas); tex.needsUpdate = true; }, 30000);
+  return { tex };
 }

@@ -42,6 +42,12 @@
   <a class="to-list" href="#list">See it as a list</a>
   <button type="button" class="back" id="back" hidden>Back to the desk <kbd>Esc</kbd></button>
 
+  <!-- A closer look at one thing on the desk: what it is, and what you can do with it. -->
+  <div class="inspect" id="inspect" hidden>
+    <p class="inspect-cap" aria-live="polite"><b></b> <span></span></p>
+    <div class="inspect-actions" role="group" aria-label="Things to do"></div>
+  </div>
+
   <!-- The computer's desktop, shown when you lean in to the screen. -->
   <div class="screen" id="screen" hidden>
     <div class="os" id="os">
@@ -104,6 +110,26 @@
         </div>
       </section>
 
+      <section class="win w-reading" data-win="reading" hidden aria-labelledby="w-reading">
+        <header class="bar"><button type="button" class="win-close" aria-label="Close the window"></button><h3 id="w-reading">Reading</h3></header>
+        <div class="win-body">
+          <div class="r-now">
+            <img class="r-cover" alt="" width="128" height="196">
+            <div>
+              <p class="r-label">On my desk now</p>
+              <h4><a class="r-title" href="https://www.goodreads.com/user/show/164485726-joseph-lattanzi" target="_blank" rel="noopener"></a></h4>
+              <p class="r-author"></p>
+              <div class="r-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="How far in"><i></i></div>
+              <p class="r-progress"></p>
+            </div>
+          </div>
+          <p class="r-fav-h">Favorites</p>
+          <ol class="r-favs"></ol>
+          <p class="r-counts"></p>
+          <p class="go"><a class="r-shelf" href="https://www.goodreads.com/user/show/164485726-joseph-lattanzi" target="_blank" rel="noopener">My shelves on Goodreads</a></p>
+        </div>
+      </section>
+
       <section class="win w-about" data-win="about" hidden aria-labelledby="w-about">
         <header class="bar"><button type="button" class="win-close" aria-label="Close the window"></button><h3 id="w-about">About me</h3></header>
         <div class="win-body">
@@ -118,6 +144,7 @@
         <button type="button" data-app="sec"><span>Boilerplate</span></button>
         <button type="button" data-app="box"><span>Box Box</span></button>
         <button type="button" data-app="thesis"><span>Thesis</span></button>
+        <button type="button" data-app="reading"><span>Reading</span></button>
         <button type="button" data-app="about"><span>About me</span></button>
       </nav>
     </div>
