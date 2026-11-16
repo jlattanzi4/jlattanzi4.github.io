@@ -11,14 +11,14 @@
 <meta property="og:description" content="Data scientist who measures messy things and ships the answers. Pull up a chair and click around his desk.">
 <meta property="og:url" content="https://jlattanzi4.github.io/">
 <meta property="og:image" content="https://jlattanzi4.github.io/images/og.jpg">
-<meta property="og:image:alt" content="A desk at night seen from the chair, lit by a lamp and a monitor light: a monitor, keyboard, a book, a watch, a snow globe, a folder, a football, a brick-built F1 car, sunglasses and an espresso.">
+<meta property="og:image:alt" content="A desk at night seen from the chair, lit by a lamp and a monitor light: a monitor, keyboard and mouse, a book, a watch, a folder, a football, a brick-built F1 car, a framed GitHub contribution graph and an espresso.">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://jlattanzi4.github.io/">
 <link rel="icon" href="logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@600&family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Caveat:wght@600&family=Instrument+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="room.css">
 <script type="importmap">
 { "imports": {
@@ -26,6 +26,31 @@
   "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
 } }
 </script>
+<!-- Fetch the whole module graph at once, instead of discovering it a level at a time. -->
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/geometries/RoundedBoxGeometry.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/RenderPass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/OutputPass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/ShaderPass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/Pass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/postprocessing/MaskPass.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/lights/RectAreaLightUniformsLib.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/lights/RectAreaLightTexturesLib.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/HorizontalBlurShader.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/VerticalBlurShader.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/CopyShader.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/LuminosityHighPassShader.js">
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/shaders/OutputShader.js">
+<link rel="modulepreload" href="room/kit.js">
+<link rel="modulepreload" href="room/props.js">
+<link rel="modulepreload" href="room/watch.js">
+<link rel="modulepreload" href="room/book.js">
+<link rel="modulepreload" href="room/macropad.js">
+<link rel="modulepreload" href="room/github.js">
+<link rel="modulepreload" href="room/look.js">
+<link rel="modulepreload" href="room/screen.js">
 <script type="module" src="room/main.js"></script>
 </head>
 <body>
@@ -51,7 +76,33 @@
   <!-- The computer's desktop, shown when you lean in to the screen. -->
   <div class="screen" id="screen" hidden>
     <div class="os" id="os">
-      <div class="menubar"><b>Joseph Lattanzi</b><span>Projects</span><span>Contact</span><time id="clock"></time></div>
+      <nav class="menubar" aria-label="Menu bar">
+        <div class="menu">
+          <button type="button" class="menu-btn me" aria-expanded="false" aria-controls="m-me">Joseph Lattanzi</button>
+          <ul class="menu-list" id="m-me" hidden>
+            <li><button type="button" data-app="about">About me</button></li>
+            <li><button type="button" data-app="reading">What I’m reading</button></li>
+          </ul>
+        </div>
+        <div class="menu">
+          <button type="button" class="menu-btn" aria-expanded="false" aria-controls="m-projects">Projects</button>
+          <ul class="menu-list" id="m-projects" hidden>
+            <li><button type="button" data-app="nfl">NFL Survivor Optimizer</button></li>
+            <li><button type="button" data-app="sec">How much of a risk disclosure is boilerplate?</button></li>
+            <li><button type="button" data-app="box">Box Box</button></li>
+            <li><button type="button" data-app="thesis">Who comes back? (thesis)</button></li>
+          </ul>
+        </div>
+        <div class="menu">
+          <button type="button" class="menu-btn" aria-expanded="false" aria-controls="m-contact">Contact</button>
+          <ul class="menu-list" id="m-contact" hidden>
+            <li><a href="mailto:lattanzi.joseph@gmail.com">Email</a></li>
+            <li><a href="https://github.com/jlattanzi4" target="_blank" rel="noopener">GitHub</a></li>
+            <li><a href="https://www.linkedin.com/in/joseph-lattanzi/" target="_blank" rel="noopener">LinkedIn</a></li>
+          </ul>
+        </div>
+        <time id="clock"></time>
+      </nav>
       <div class="hello">
         <h2>Joseph Lattanzi</h2>
         <p>is a data scientist who measures messy things and ships the answers.</p>

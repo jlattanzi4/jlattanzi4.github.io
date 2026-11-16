@@ -3,7 +3,7 @@
 // the desk top is at y = TOP and the viewer sits at its front edge, looking toward −z.
 
 import * as THREE from "three";
-import { TOP, motion, tween, lerp, canvasTexture, rng, wrapText, M, P, box, mesh, at, roundedRectPath } from "./kit.js";
+import { TOP, motion, tween, lerp, canvasTexture, rng, wrapText, M, P, box, mesh, at } from "./kit.js";
 
 // ----------------------------------------------------------- textures
 
@@ -208,26 +208,6 @@ const steamTexture = () => canvasTexture(128, 256, (g, w, h) => {
   g.fillStyle = grad; g.fillRect(0, 0, w, h);
 });
 
-// Tortoiseshell acetate: honey and amber blotches in dark brown.
-const tortoiseTexture = () => canvasTexture(512, 512, (g, w, h) => {
-  g.fillStyle = "#3a1a08"; g.fillRect(0, 0, w, h);
-  const r = rng(53);
-  for (let i = 0; i < 140; i++) {
-    const x = r() * w, y = r() * h, rx = 10 + r() * 46, ry = rx * (0.3 + r() * 0.5);
-    const tone = r();
-    const col = tone < 0.45 ? [196, 120, 40] : tone < 0.75 ? [150, 72, 22] : [228, 168, 82];
-    const grad = g.createRadialGradient(0, 0, 0, 0, 0, rx);
-    grad.addColorStop(0, `rgba(${col}, ${0.5 + r() * 0.4})`); grad.addColorStop(1, `rgba(${col}, 0)`);
-    g.save(); g.translate(x, y); g.rotate(r() * Math.PI); g.scale(1, ry / rx);
-    g.fillStyle = grad; g.beginPath(); g.arc(0, 0, rx, 0, 7); g.fill(); g.restore();
-  }
-  for (let i = 0; i < 60; i++) {
-    const x = r() * w, y = r() * h, rad = 6 + r() * 20;
-    g.fillStyle = `rgba(12, 5, 2, ${0.4 + r() * 0.4})`;
-    g.beginPath(); g.ellipse(x, y, rad, rad * 0.6, r() * 3, 0, 7); g.fill();
-  }
-}, { repeat: [7, 7] });
-
 // ------------------------------------------------------------- the desk
 export function buildDesk(scene, { screenTexture, spines = [] }) {
   const items = {};
@@ -236,9 +216,11 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   // The room: a plaster wall and a dark floor far below.
   const wall = mesh(new THREE.PlaneGeometry(8, 4), M("#ffffff", 0.92, 0, { map: plasterTexture() }), { cast: false });
   wall.position.set(0, 1.6, -0.86);
+  wall.userData.noContact = true;
   scene.add(wall);
   const floor = mesh(new THREE.PlaneGeometry(8, 8), M("#17130f", 0.9), { cast: false });
   floor.rotation.x = -Math.PI / 2;
+  floor.userData.noContact = true;
   scene.add(floor);
 
   // Deeper than a real desk toward the chair, so a tall phone view never runs off its front edge.
@@ -248,10 +230,12 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   }));
   deskTop.material.roughnessMap.colorSpace = THREE.NoColorSpace;
   deskTop.position.set(0, TOP - 0.02, -0.275);
+  deskTop.userData.noContact = true;
   scene.add(deskTop);
   for (const x of [-0.84, 0.84]) {
     const leg = mesh(box(0.05, TOP - 0.04, 0.8, 0.01), M("#1c1714", 0.6));
     leg.position.set(x, (TOP - 0.04) / 2, -0.42);
+    leg.userData.noContact = true;
     scene.add(leg);
   }
 
@@ -260,6 +244,7 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   const felt = feltTexture();
   const mat = mesh(box(MAT.w, MAT.h, MAT.d, 0.0015, 2), M("#26282b", 1, 0, { roughnessMap: felt, bumpMap: felt, bumpScale: 0.9 }), { cast: false });
   mat.position.set(MAT.x, TOP + MAT.h / 2, MAT.z);
+  mat.userData.noContact = true;
   scene.add(mat);
   const ON_MAT = TOP + MAT.h;
 
@@ -314,7 +299,57 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   const u = 0.0184, gap = 0.0028;
   const keyGeo = box(1, 0.0045, 0.0156, 0.0016, 2);
   const count = rows.reduce((n, r) => n + r.length, 0);
-  const keys = new THREE.InstancedMesh(keyGeo, M("#efeeea", 0.5), count);
+  // Legends: every key's label drawn into one atlas; each key looks up its own cell, and only
+  // on its top face. Wide keys get their text pre-squeezed, so it reads right once stretched.
+  const COLS = 10, ROWS = 8, CELL = 128;
+  const atlas = document.createElement("canvas");
+  atlas.width = COLS * CELL; atlas.height = ROWS * CELL;
+  const ag = atlas.getContext("2d");
+  ag.fillStyle = "#fff"; ag.textAlign = "center"; ag.textBaseline = "middle";
+  const legendOf = (code) => {
+    if (code.startsWith("Key")) return [code.slice(3)];
+    if (code.startsWith("Digit")) return [")!@#$%^&*(".charAt(Number(code.slice(5))), code.slice(5)];
+    return ({
+      Backquote: ["~", "`"], Minus: ["_", "-"], Equal: ["+", "="], BracketLeft: ["{", "["], BracketRight: ["}", "]"], Backslash: ["|", "\\"],
+      Semicolon: [":", ";"], Quote: ["\"", "'"], Comma: ["<", ","], Period: [">", "."], Slash: ["?", "/"],
+      Backspace: ["delete", null, "right"], Tab: ["tab", null, "left"], CapsLock: ["caps lock", null, "left"], Enter: ["return", null, "right"],
+      ShiftLeft: ["shift", null, "left"], ShiftRight: ["shift", null, "right"], ControlLeft: ["control", null, "left"], AltLeft: ["option", null, "left"],
+      MetaLeft: ["command", null, "left"], MetaRight: ["command", null, "right"], AltRight: ["option", null, "right"],
+      ArrowLeft: ["◀"], ArrowUp: ["▲"], ArrowRight: ["▶"],
+    })[code] || [""];
+  };
+  const legendAt = new Float32Array(count * 2);
+  const drawLegend = (i, code, wUnits) => {
+    const cx = (i % COLS) * CELL, cy = Math.floor(i / COLS) * CELL;
+    const [a, b, side] = legendOf(code);
+    ag.save(); ag.translate(cx + CELL / 2, cy + CELL / 2); ag.scale(1 / wUnits, 1);
+    if (side) {
+      ag.font = "500 22px 'Instrument Sans', sans-serif";
+      ag.textAlign = side; ag.fillText(a, side === "left" ? -CELL * wUnits / 2 + 18 : CELL * wUnits / 2 - 18, 34);
+    } else if (b != null) {
+      ag.font = "500 30px 'Instrument Sans', sans-serif"; ag.fillText(a, 0, -20); ag.fillText(b, 0, 20);
+    } else {
+      ag.font = `500 ${a.length > 1 ? 24 : 40}px 'Instrument Sans', sans-serif`; ag.fillText(a, 0, 0);
+    }
+    ag.restore();
+    // The cell's corner in UV space (canvas rows count down; UVs count up).
+    legendAt[i * 2] = (i % COLS) / COLS;
+    legendAt[i * 2 + 1] = 1 - (Math.floor(i / COLS) + 1) / ROWS;
+  };
+  keyGeo.setAttribute("legend", new THREE.InstancedBufferAttribute(legendAt, 2));
+  const legendTex = new THREE.CanvasTexture(atlas);
+  legendTex.anisotropy = 8;
+  const keyMat = M("#efeeea", 0.5);
+  keyMat.onBeforeCompile = (shader) => {
+    shader.uniforms.legendMap = { value: legendTex };
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nattribute vec2 legend;\nvarying vec2 vLegendUv;\nvarying float vTop;")
+      .replace("#include <uv_vertex>", `#include <uv_vertex>\nvLegendUv = legend + uv * vec2(${1 / COLS}, ${1 / ROWS});\nvTop = normal.y;`);
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", "#include <common>\nuniform sampler2D legendMap;\nvarying vec2 vLegendUv;\nvarying float vTop;")
+      .replace("#include <map_fragment>", "#include <map_fragment>\nfloat ink = texture2D(legendMap, vLegendUv).a * step(0.9, vTop);\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.12), ink * 0.9);");
+  };
+  const keys = new THREE.InstancedMesh(keyGeo, keyMat, count);
   keys.castShadow = true; keys.receiveShadow = true;
   const keyIndex = new Map();
   const keyRest = [];
@@ -328,6 +363,7 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
       const kw = wUnits * u;
       const m4 = new THREE.Matrix4().compose(new THREE.Vector3(x + kw / 2, 0.0065, -0.042 + ri * u), new THREE.Quaternion(), new THREE.Vector3(kw - gap, 1, 1));
       keys.setMatrixAt(n, m4);
+      drawLegend(n, code, wUnits);
       keyRest.push(m4.clone());
       keyIndex.set(code, n);
       x += kw; n++;
@@ -359,11 +395,12 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   });
   items.keyboard = { root: kb, label: "Keyboard", sub: "Type on yours and watch", pressKey };
 
-  const pad = mesh(box(0.13, 0.006, 0.112, 0.008, 3), P("#e6e6e3", 0.3, { clearcoat: 0.3 }));
-  at(pad, 0.155, ON_MAT + 0.003, -0.262, -0.02);
-  scene.add(pad);
+  // An ergonomic mouse, the kind with a thumb rest.
+  const mouse = ergonomicMouse();
+  at(mouse, 0.17, ON_MAT, -0.262, 0.14);
+  scene.add(mouse);
 
-  // ---- espresso: saucer, cup, crema, steam
+  // ---- espresso: saucer, cup, crema, steam (just there, like the plant and the AirPods)
   const cup = new THREE.Group();
   const ceramic = P("#f4f2ed", 0.28, { clearcoat: 0.8 });
   const saucer = mesh(new THREE.CylinderGeometry(0.06, 0.046, 0.008, 48), ceramic);
@@ -375,8 +412,7 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   handle.position.set(0.036, 0.034, 0); handle.rotation.z = -Math.PI / 2 - 0.25;
   const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.0285, 40), M("#ffffff", 0.2, 0, { map: cremaTexture() }));
   coffee.rotation.x = -Math.PI / 2;
-  const level = (f) => { const y = 0.012 + f * 0.036; coffee.position.y = 0.008 + y; coffee.scale.setScalar(0.74 + f * 0.26); coffee.visible = f > 0.02; };
-  level(1);
+  coffee.position.y = 0.056;
   const steamTex = steamTexture();
   const puffs = [0, 1, 2, 3].map((i) => {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, color: "#c9c4bb", transparent: true, depthWrite: false, opacity: 0 }));
@@ -388,55 +424,19 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   cup.add(saucer, vessel, handle, coffee);
   at(cup, 0.5, TOP, -0.19, 0.6);
   scene.add(cup);
-  let full = 1, steamBoost = 0;
   updates.push((t) => {
-    steamBoost = Math.max(0, steamBoost - 0.01);
     for (const s of puffs) {
       const p = (t * 0.00018 + s.userData.phase) % 1;
       s.position.set(Math.sin(p * 6 + s.userData.phase * 9) * 0.008, 0.06 + p * 0.1, Math.cos(p * 5) * 0.004);
       s.scale.set(0.025 + p * 0.03, 0.05 + p * 0.05, 1);
-      s.material.opacity = full > 0.05 ? Math.sin(p * Math.PI) * 0.07 * (0.6 + full * 0.4 + steamBoost) : 0;
+      s.material.opacity = Math.sin(p * Math.PI) * 0.07;
     }
   });
-  items.cup = {
-    root: cup, label: "Espresso", sub: "Take a sip",
-    async act() {
-      if (full <= 0.02) { items.cup.sub = "Take a sip"; await tween(700, (k) => level(k), "out"); full = 1; return; }
-      steamBoost = 0.8;
-      const from = full, to = Math.max(0, full - 0.34);
-      await tween(380, (k) => { cup.rotation.z = Math.sin(k * Math.PI) * 0.12; }, "inOut");
-      await tween(500, (k) => level(lerp(from, to, k)), "out");
-      full = to;
-      if (full <= 0.02) items.cup.sub = "Empty. Click for another";
-    },
-  };
 
-  // ---- AirPods Pro case: the lid opens on a hinge
-  const pods = new THREE.Group();
-  const gloss = P("#f2f2f0", 0.18, { clearcoat: 1 });
-  const caseBase = mesh(box(0.06, 0.016, 0.045, 0.008, 5), gloss);
-  caseBase.position.y = 0.008;
-  const hinge = new THREE.Group();
-  hinge.position.set(0, 0.0165, -0.0225);
-  const lid = mesh(box(0.06, 0.009, 0.045, 0.0045, 5), gloss);
-  lid.position.set(0, 0.0045, 0.0225);
-  hinge.add(lid);
-  const bud = (x) => { const b = mesh(new THREE.CapsuleGeometry(0.0055, 0.008, 6, 12), gloss); b.position.set(x, 0.017, -0.004); return b; };
-  const led = mesh(new THREE.CircleGeometry(0.0012, 12), new THREE.MeshStandardMaterial({ color: "#000000", emissive: "#3fdc6a", emissiveIntensity: 4 }), { cast: false });
-  led.position.set(0, 0.009, 0.0226);
-  pods.add(caseBase, hinge, bud(-0.012), bud(0.012), led);
-  at(pods, 0.335, ON_MAT, -0.13, -0.45);
+  // ---- AirPods Pro case, standing up
+  const pods = airpodsCase();
+  at(pods, 0.36, ON_MAT, -0.115, -0.35);
   scene.add(pods);
-  let podsOpen = false;
-  items.pods = {
-    root: pods, label: "AirPods", sub: "Pop the lid",
-    async act() {
-      podsOpen = !podsOpen;
-      const from = hinge.rotation.x, to = podsOpen ? -1.75 : 0;
-      items.pods.sub = podsOpen ? "Close the lid" : "Pop the lid";
-      await tween(560, (k) => { hinge.rotation.x = lerp(from, to, k); }, podsOpen ? "spring" : "out");
-    },
-  };
 
   // ---- sticky notes: the contact details
   const note = (color, lines, w = 0.076, curl = 0.004, backlit = 0) => {
@@ -490,13 +490,6 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
     },
     close() { if (folderOpen) { folderOpen = false; tween(600, (k) => { spine.rotation.z = lerp(Math.PI * 0.985, 0, k); }, "inOut"); } },
   };
-
-  // The GitHub note is stuck to the folder's cover, so it rides along when the folder opens.
-  const ghNote = note("#ffa6c9", [["GitHub", 140], ["the code", 100]], 0.07, 0.003);
-  ghNote.rotation.x = -Math.PI / 2; ghNote.rotation.z = -0.22;
-  ghNote.position.set(fw * 0.74, 0.0009, fd * 0.3);
-  spine.add(ghNote);
-  items.github = { root: ghNote, label: "GitHub", sub: "github.com/jlattanzi4", href: "https://github.com/jlattanzi4" };
 
   // ---- the thesis, on two favourite books
   const books = new THREE.Group();
@@ -586,7 +579,6 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   const soil = mesh(new THREE.CircleGeometry(0.05, 24), M("#2a1e15", 1), { cast: false });
   soil.rotation.x = -Math.PI / 2; soil.position.y = 0.094;
   plant.add(pot, soil);
-  const leaves = [];
   const leafMat = M("#2d5534", 0.6);
   const r = rng(21);
   for (let i = 0; i < 9; i++) {
@@ -599,17 +591,9 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
     leaf.position.y = h / 2;
     holder.add(leaf);
     plant.add(holder);
-    leaves.push(holder);
   }
   at(plant, 0.69, TOP, -0.68);
   scene.add(plant);
-  items.plant = {
-    root: plant, label: "Snake plant", sub: "Hard to kill",
-    async act() {
-      const rest = leaves.map((l) => l.rotation.z);
-      await tween(1100, (k) => leaves.forEach((l, i) => { l.rotation.z = rest[i] + Math.sin(k * Math.PI * 6 + i) * 0.12 * (1 - k); }), "linear");
-    },
-  };
 
   // ---- desk lamp: a warm pool of light on the left of the desk
   const lamp = new THREE.Group();
@@ -642,39 +626,27 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   scene.add(lamp);
   items.lamp = { root: lamp, label: "Desk lamp", sub: "Switch it off", bulb, inner };
 
-  // ---- on the wall: a framed print of the redline figure
-  const frame = new THREE.Group();
-  const frameMat = M("#141416", 0.5);
-  frame.add(mesh(box(0.37, 0.27, 0.02, 0.003), frameMat));
-  const matBoard = mesh(new THREE.PlaneGeometry(0.34, 0.24), M("#efede7", 0.95), { cast: false });
-  matBoard.position.z = 0.0105;
-  const printTex = new THREE.TextureLoader().load("images/redline-print.png");
-  printTex.colorSpace = THREE.SRGBColorSpace; printTex.anisotropy = 8;
-  const print = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.179), M("#ffffff", 0.9, 0, { map: printTex }));
-  print.position.z = 0.011;
-  // Glazing: a faint reflection across the glass.
-  const glazing = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.24), new THREE.MeshPhysicalMaterial({ color: "#ffffff", roughness: 0.04, transparent: true, opacity: 0.08, clearcoat: 1 }));
-  glazing.position.z = 0.0125;
-  frame.add(matBoard, print, glazing);
-  frame.position.set(0.6, 1.21, -0.846);
-  frame.rotation.z = 0.004;
-  scene.add(frame);
-  items.print = { root: frame, label: "A print of the SEC study’s figure", sub: "One filing, marked up against the year before", act: async () => "sec" };
-
-  // ---- sunglasses, folded, by the monitor
-  const shades = sunglasses();
-  at(shades.root, 0.5, TOP, -0.39, -0.45);
-  scene.add(shades.root);
-  let unfolded = false;
-  items.sunglasses = {
-    root: shades.root, label: "Sunglasses", sub: "Unfold them",
-    async act() {
-      unfolded = !unfolded;
-      items.sunglasses.sub = unfolded ? "Fold them" : "Unfold them";
-      const from = shades.open, to = unfolded ? 1 : 0;
-      await tween(650, (k) => shades.set(lerp(from, to, k)), "inOut");
-    },
+  // ---- cables: every desk has them
+  const cable = (pts, radius, color) => {
+    const curve = new THREE.CatmullRomCurve3(pts.map(([x, y, z]) => new THREE.Vector3(x, y, z)), false, "catmullrom", 0.4);
+    const c = mesh(new THREE.TubeGeometry(curve, 160, radius, 8), M(color, 0.55));
+    scene.add(c);
+    return c;
   };
+  const R = 0.0022, F = TOP + 0.0022;
+  // The lamp's cord runs back along the desk and off the back edge.
+  cable([[-0.69, TOP + 0.004, -0.66], [-0.64, F, -0.71], [-0.5, F, -0.79], [-0.36, F, -0.82], [-0.3, F, -0.845], [-0.29, TOP - 0.02, -0.858], [-0.29, TOP - 0.3, -0.858]], R, "#141416");
+  // The monitor's cable drops from the back of the stand and away.
+  cable([[0.0, TOP + 0.12, -0.648], [0.0, TOP + 0.03, -0.668], [0.02, F + 0.001, -0.71], [0.06, F + 0.001, -0.78], [0.07, F + 0.001, -0.84], [0.07, TOP - 0.03, -0.859], [0.07, TOP - 0.3, -0.859]], 0.0026, "#d8d8d4");
+  // The macro pad is wired: a coiled cable, then a straight run to the back.
+  const coil = [];
+  const start = new THREE.Vector3(0.36, ON_MAT + 0.006, -0.29), end = new THREE.Vector3(0.43, F, -0.4);
+  for (let i = 0; i <= 120; i++) {
+    const t = i / 120, a = t * Math.PI * 2 * 14;
+    const p = start.clone().lerp(end, t);
+    coil.push([p.x + Math.cos(a) * 0.004 * Math.sin(t * Math.PI), p.y + 0.004 + Math.sin(a) * 0.004 * Math.sin(t * Math.PI), p.z]);
+  }
+  cable([...coil, [0.5, F, -0.47], [0.57, F, -0.6], [0.6, F, -0.76], [0.61, F, -0.845], [0.61, TOP - 0.03, -0.858], [0.61, TOP - 0.3, -0.858]], 0.0018, "#2a3a4a");
 
   return { items, updates, onMat: ON_MAT };
 }
@@ -774,68 +746,109 @@ function brickCar() {
   return { root, spin: (a) => { for (const w of wheels) w.rotation.z = -a; } };
 }
 
-// ------------------------------------------------------------ sunglasses
-// Tortoiseshell acetate with dark green lenses, built from a 2D outline: the front is one
-// extruded shape with two lens holes and a keyhole bridge; the temples fold on hinges.
-function sunglasses() {
+// ---------------------------------------------------------- an ergonomic mouse
+// Sculpted rather than boxy: a shell swept from the heel to the buttons, high under the palm,
+// with a thumb rest that flares out on the left, a steel scroll wheel in the split between
+// the buttons, and a thumb wheel. Graphite, soft-touch. It points away from the chair (−z).
+function ergonomicMouse() {
   const root = new THREE.Group();
-  // Two rims joined by a keyhole bridge: square at the brow, rounder toward the cheek.
-  const W = 0.067, H = 0.024, B = -0.02, IN = 0.008;
-  const rt = 0.01, rb = 0.019, ri = 0.012;
-  const outline = new THREE.Shape();
-  outline.moveTo(-W + rt, H);
-  outline.lineTo(W - rt, H); outline.quadraticCurveTo(W, H, W, H - rt);
-  outline.lineTo(W, B + rb); outline.quadraticCurveTo(W, B, W - rb, B);
-  outline.lineTo(IN + ri, B); outline.quadraticCurveTo(IN, B, IN, B + ri);
-  outline.lineTo(IN, 0.004); outline.quadraticCurveTo(0, 0.024, -IN, 0.004);
-  outline.lineTo(-IN, B + ri); outline.quadraticCurveTo(-IN, B, -IN - ri, B);
-  outline.lineTo(-W + rb, B); outline.quadraticCurveTo(-W, B, -W, B + rb);
-  outline.lineTo(-W, H - rt); outline.quadraticCurveTo(-W, H, -W + rt, H);
-  const lensShape = (cx) => roundedRectPath(new THREE.Shape(), cx, 0.002, 0.05, 0.036, 0.0115);
-  const holes = [-0.0375, 0.0375].map((cx) => roundedRectPath(new THREE.Path(), cx, 0.002, 0.05, 0.036, 0.0115));
-  outline.holes.push(...holes);
-  const depth = 0.0045;
-  const frontGeo = new THREE.ExtrudeGeometry(outline, { depth, bevelEnabled: true, bevelThickness: 0.0011, bevelSize: 0.0007, bevelSegments: 3, curveSegments: 20 });
-  frontGeo.translate(0, 0, -depth / 2);
-  const acetate = new THREE.MeshPhysicalMaterial({ color: "#ffffff", map: tortoiseTexture(), roughness: 0.28, clearcoat: 1, clearcoatRoughness: 0.08 });
-  const front = mesh(frontGeo, acetate);
-  // Green G-15-style lenses: dark, glossy, with a little of the room reflected in them.
-  const lensMat = new THREE.MeshPhysicalMaterial({ color: "#26402c", roughness: 0.03, metalness: 0.35, transparent: true, opacity: 0.8, clearcoat: 1, clearcoatRoughness: 0.02, envMapIntensity: 2.4, side: THREE.DoubleSide });
-  for (const cx of [-0.0375, 0.0375]) {
-    const lens = mesh(new THREE.ShapeGeometry(lensShape(cx), 20), lensMat, { cast: true, receive: false });
-    lens.position.z = 0.0002;
-    front.add(lens);
-  }
-  // Temples: hinged at the outer edges, folding in behind the lenses.
-  const temples = [];
-  for (const side of [-1, 1]) {
-    const hinge = new THREE.Group();
-    hinge.position.set(side * (W - 0.002), H - 0.008, -depth / 2 - 0.0012);
-    const arm = mesh(box(0.0035, 0.007, 0.138, 0.0015), acetate);
-    arm.position.z = -0.069;
-    const tip = mesh(box(0.0035, 0.006, 0.03, 0.0015), acetate);
-    tip.position.set(0, -0.009, -0.132); tip.rotation.x = 0.55;
-    hinge.add(arm, tip);
-    front.add(hinge);
-    temples.push({ hinge, side });
-  }
-  // Folded, they lie back on their temples with the lenses up, catching the monitor and the light bar.
-  front.position.y = 0.0125;
-  front.rotation.x = -1.0;
-  root.add(front);
-  const g = { root, open: 0 };
-  g.set = (k) => {
-    g.open = k;
-    for (const { hinge, side } of temples) {
-      // Folded: each temple swings in across the back (the right one sits a little further back).
-      const folded = side * (Math.PI / 2 - 0.06);
-      hinge.rotation.y = lerp(folded, 0, k);
-      hinge.position.z = -depth / 2 - 0.0012 - (side > 0 ? 0.004 : 0) * (1 - k);
-    }
-    // Open, they stand on the frame and the temple tips, leaning back.
-    front.rotation.x = lerp(-1.0, -0.3, k);
-    front.position.y = lerp(0.0125, H + 0.0066, k);
+  const L = 0.124, W = 0.08, HM = 0.048;
+  const U = 72, T = 56;
+  const pos = [], idx = [];
+  const shell = (u, t) => {
+    const e = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(2 * u - 1), 2.4)), 0.5); // rounded heel and nose
+    const half = (W / 2) * (0.74 + 0.26 * Math.sin(Math.PI * Math.min(1, u * 1.3))) * e;
+    const h = HM * (0.5 + 0.5 * Math.exp(-(((u - 0.36) / 0.3) ** 2))) * Math.pow(e, 0.55);
+    const a = Math.PI * t; // 0 at the left foot, over the top, π at the right foot
+    let x = -Math.cos(a) * half;
+    // The palm side leans a little to the right; the thumb rest flares out at the bottom left.
+    x += Math.sin(a) * 0.004 * (1 - u);
+    if (t < 0.5) x -= 0.012 * Math.exp(-(((u - 0.52) / 0.2) ** 2)) * Math.pow(1 - t * 2, 2.5) * e;
+    const y = Math.pow(Math.sin(a), 0.7) * h * (t < 0.5 ? 1 - 0.25 * Math.exp(-(((u - 0.5) / 0.2) ** 2)) * (1 - t * 2) : 1);
+    return [x, y, (0.5 - u) * L];
   };
-  g.set(0);
-  return g;
+  for (let i = 0; i <= U; i++) for (let j = 0; j <= T; j++) pos.push(...shell(i / U, j / T));
+  for (let i = 0; i < U; i++) for (let j = 0; j < T; j++) {
+    const a = i * (T + 1) + j, b = a + T + 1;
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
+  }
+  // The flat underside: a strip between the left and right feet.
+  for (let i = 0; i < U; i++) {
+    const l0 = i * (T + 1), l1 = (i + 1) * (T + 1), r0 = l0 + T, r1 = l1 + T;
+    idx.push(l0, r1, r0, l0, l1, r1);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  const graphite = new THREE.MeshPhysicalMaterial({ color: "#35373b", roughness: 0.72, sheen: 0.35, sheenColor: new THREE.Color("#6a6e75"), sheenRoughness: 0.6 });
+  root.add(mesh(geo, graphite));
+  const top = (u) => shell(u, 0.5);
+  // The split between the two buttons, from the wheel to the nose.
+  const split = [];
+  for (let u = 0.7; u <= 0.985; u += 0.01) { const [x, y, z] = top(u); split.push(new THREE.Vector3(x, y + 0.0002, z)); }
+  root.add(mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(split), 24, 0.00045, 6), M("#141517", 0.9), { cast: false }));
+  // Scroll wheel: knurled steel, half sunk into the shell.
+  const [wx, wy, wz] = top(0.79);
+  const wheelGeo = new THREE.CylinderGeometry(0.0085, 0.0085, 0.0065, 48, 1);
+  const wp = wheelGeo.attributes.position;
+  for (let i = 0; i < wp.count; i++) {
+    const a = Math.atan2(wp.getZ(i), wp.getX(i));
+    if (Math.hypot(wp.getX(i), wp.getZ(i)) < 0.001) continue;
+    const k = Math.round((a / (Math.PI * 2)) * 48) % 2 ? 1 : 0.95;
+    wp.setX(i, wp.getX(i) * k); wp.setZ(i, wp.getZ(i) * k);
+  }
+  wheelGeo.computeVertexNormals();
+  const wheel = mesh(wheelGeo, M("#a7abb0", 0.32, 1));
+  wheel.rotation.z = Math.PI / 2;
+  wheel.position.set(wx, wy - 0.0035, wz);
+  root.add(wheel);
+  // A thumb wheel on the left flank, above the thumb rest.
+  const [tx, ty, tz] = shell(0.52, 0.2);
+  const thumb = mesh(new THREE.CylinderGeometry(0.0062, 0.0062, 0.0035, 32), M("#55585e", 0.4, 0.6));
+  thumb.rotation.x = Math.PI / 2;
+  thumb.position.set(tx + 0.0012, ty + 0.002, tz);
+  root.add(thumb);
+  return root;
+}
+
+// ------------------------------------------------------------- AirPods Pro case
+// Standing up: a squircle seen from the front, pillowed front and back, with the lid's
+// seam a third of the way down and a hinge you can't see from here.
+function airpodsCase() {
+  const root = new THREE.Group();
+  const W = 0.0606, H = 0.0452, D = 0.0217, SEAM = H - 0.0148;
+  const bevel = 0.0072, grow = 0.0036;
+  const a = W / 2 - grow, b = H / 2 - grow, n = 4.4;
+  // The outline, inset by the bevel that will round it back out.
+  const pt = (t) => {
+    const c = Math.cos(t), s = Math.sin(t);
+    return [a * Math.sign(c) * Math.pow(Math.abs(c), 2 / n), H / 2 + b * Math.sign(s) * Math.pow(Math.abs(s), 2 / n)];
+  };
+  const part = (upper) => {
+    const shape = new THREE.Shape();
+    const pts = [];
+    for (let i = 0; i <= 160; i++) {
+      const [x, y] = pt((i / 160) * Math.PI * 2);
+      if (upper ? y >= SEAM : y <= SEAM) pts.push([x, y]);
+    }
+    // Sort round the part's centre so the outline runs in order, then close across the seam.
+    const cy = upper ? (SEAM + H) / 2 : SEAM / 2;
+    pts.sort((p, q) => Math.atan2(p[1] - cy, p[0]) - Math.atan2(q[1] - cy, q[0]));
+    shape.moveTo(...pts[0]);
+    for (const p of pts.slice(1)) shape.lineTo(...p);
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: D - bevel * 2, bevelEnabled: true, bevelThickness: bevel, bevelSize: grow - (upper ? 0.0002 : 0), bevelSegments: 18, curveSegments: 4 });
+    geo.translate(0, 0, -(D - bevel * 2) / 2);
+    return geo;
+  };
+  const white = new THREE.MeshPhysicalMaterial({ color: "#f3f3f1", roughness: 0.22, clearcoat: 0.7, clearcoatRoughness: 0.15 });
+  const body = mesh(part(false), white);
+  const lid = mesh(part(true), white);
+  // The lid sits a hair above the body, so the seam reads as a fine line.
+  lid.position.y = 0.0003;
+  const led = mesh(new THREE.CircleGeometry(0.0009, 16), M("#2b2d2c", 0.4), { cast: false });
+  led.position.set(0, SEAM - 0.009, D / 2 + 0.00005);
+  root.add(body, lid, led);
+  return root;
 }

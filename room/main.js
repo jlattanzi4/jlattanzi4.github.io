@@ -4,12 +4,13 @@ import * as THREE from "three";
 import { TOP, motion, tween, stepTweens } from "./kit.js";
 import { buildDesk } from "./props.js";
 import { buildWatch } from "./watch.js";
-import { buildGlobe } from "./globe.js";
 import { loadShelf, buildBook } from "./book.js";
 import { buildMacropad } from "./macropad.js";
+import { loadGithub, buildGithubPrint } from "./github.js";
 import { createLook, quality } from "./look.js";
 import { createScreen, screenTexture, theCall } from "./screen.js";
 
+performance.mark("desk:modules");
 const room = document.getElementById("room");
 const canvas = document.getElementById("scene");
 const label = document.getElementById("label");
@@ -23,7 +24,7 @@ motion.reduce = reduceQuery.matches;
 reduceQuery.addEventListener("change", (e) => { motion.reduce = e.matches; });
 
 const fontsReady = Promise.race([
-  Promise.all(["600 64px Caveat", "600 40px 'Source Serif 4'", "400 40px 'Source Serif 4'", "500 20px 'Instrument Sans'", "600 20px 'Instrument Sans'", "700 70px 'Barlow Condensed'"].map((f) => document.fonts.load(f))),
+  Promise.all(["600 64px Caveat", "600 40px 'Source Serif 4'", "400 40px 'Source Serif 4'", "500 20px 'Instrument Sans'", "600 20px 'Instrument Sans'", "700 70px 'Barlow Condensed'", "400 40px 'UnifrakturMaguntia'"].map((f) => document.fonts.load(f))),
   new Promise((ok) => setTimeout(ok, 2500)),
 ]);
 
@@ -38,19 +39,21 @@ const tier = quality();
 renderer.setPixelRatio(tier.pixelRatio);
 
 const scene = new THREE.Scene();
-const [shelf] = await Promise.all([loadShelf(), fontsReady]);
+const [shelf, graph] = await Promise.all([loadShelf(), loadGithub(), fontsReady]);
+performance.mark("desk:data");
 
 const screenTex = screenTexture();
 const { items, updates, onMat } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines });
 items.watch = buildWatch(scene, { x: -0.335, y: TOP, z: -0.43, ry: -0.35 });
-items.globe = buildGlobe(scene, { x: -0.255, y: TOP, z: -0.655, ry: 0.15 });
 items.macropad = buildMacropad(scene, { x: 0.325, y: onMat, z: -0.262, ry: -0.04 });
 const book = buildBook(scene, shelf, { x: -0.54, z: -0.385, ry: 0.28 });
 if (book) items.book = book;
+items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
 const look = createLook(renderer, scene, camera, items, tier);
+performance.mark("desk:built");
 
 const HOME_TARGET = new THREE.Vector3(0, 0.95, -0.42);
 const HOME_DIR = new THREE.Vector3(0, 0.31, 0.8).normalize();
@@ -250,8 +253,10 @@ function showLabel(id) {
   label.querySelector("b").textContent = item.label;
   label.querySelector("span").textContent = item.sub;
   const s = toScreen(anchor(item));
-  label.style.left = `${s.x}px`;
-  label.style.top = `${s.y}px`;
+  // Keep the whole label on screen: it sits above its object unless that would cut it off.
+  const w = label.offsetWidth, h = label.offsetHeight;
+  label.style.left = `${Math.min(room.clientWidth - w / 2 - 8, Math.max(w / 2 + 8, s.x))}px`;
+  label.style.top = `${Math.max(h + 62, s.y)}px`; // clear of the buttons along the top edge
   label.classList.add("on");
 }
 function hideLabel() { label.classList.remove("on"); }
@@ -329,8 +334,8 @@ async function activate(id) {
 }
 
 // Keyboard users reach every object through buttons laid over the scene:
-// the computer first, then the projects, the contact notes, and the rest.
-const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "print", "book", "watch", "globe", "macropad", "sunglasses", "mail", "linkedin", "github", "cup", "pods", "keyboard", "plant", "lamp", "lightbar"];
+// the computer first, then the projects, the things that are mine, the ways to reach me, and the rest.
+const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "mail", "linkedin", "keyboard", "lamp", "lightbar"];
 const spots = TAB_ORDER.filter((id) => items[id]).map((id) => items[id]).map((item) => {
   const b = document.createElement("button");
   b.type = "button";
@@ -357,7 +362,7 @@ addEventListener("keyup", (e) => { items.keyboard.pressKey(e.code, false); });
 addEventListener("blur", () => { for (const c of ["ShiftLeft", "MetaLeft", "AltLeft", "ControlLeft"]) items.keyboard.pressKey(c, false); });
 
 // ----------------------------------------------------------------- loop
-const NO_LIFT = new Set(["monitor", "mail", "linkedin", "lamp", "lightbar", "keyboard", "print"]);
+const NO_LIFT = new Set(["monitor", "mail", "linkedin", "lamp", "lightbar", "keyboard", "github"]);
 let running = true;
 let frames = 0;
 const timing = { start: 0, count: 0 };
@@ -386,9 +391,9 @@ function frame(now) {
   }
   for (const u of updates) u(now);
   items.watch.update(now, look.state);
-  items.globe.update(now);
   items.macropad.update(now);
   look.render(now, motion.reduce);
+  if (frames === 0) performance.mark("desk:first-frame");
   if (frames++ === 1) { loading.classList.add("gone"); room.classList.add("ready"); }
   if (frames % 4 === 0 && mode === "desk") placeSpots();
   // If the first few seconds run slow, render fewer pixels.
@@ -414,9 +419,13 @@ document.addEventListener("visibilitychange", () => {
 });
 addEventListener("resize", resize);
 resize();
-look.captureLight();
-setTimeout(() => look.captureLight(), 1500); // again once the print and covers have loaded
 placeSpots();
+// Compile every shader before the first frame without blocking the page (browsers that
+// support it compile in parallel), then photograph the lit desk for reflections once it's up.
+// Never wait on it for long: if a browser is slow to report, the first frame compiles the rest.
+await Promise.race([renderer.compileAsync(scene, camera).catch(() => {}), new Promise((ok) => setTimeout(ok, 1500))]);
 requestAnimationFrame(frame);
+requestAnimationFrame(() => requestAnimationFrame(() => look.captureLight()));
+setTimeout(() => look.captureLight(), 1500); // again once everything has drawn once
 setTimeout(() => theCall().catch(() => {}), 1500); // warm up this week's pick in the background
 if (new URLSearchParams(location.search).has("debug")) Object.assign(window, { desk: { THREE, scene, camera, renderer, look, items, inspect, leaveInspect } });

@@ -21,6 +21,7 @@ export function tween(duration, onUpdate, curve = "inOut") {
     tweens.add({ start: performance.now(), duration, onUpdate, curve: ease[curve], done });
   });
 }
+export const tweening = () => tweens.size > 0;
 export function stepTweens(now) {
   for (const t of tweens) {
     const p = Math.min(1, (now - t.start) / t.duration);
@@ -92,14 +93,3 @@ export function mesh(geo, mat, { cast = true, receive = true } = {}) {
   return m;
 }
 export function at(obj, x, y, z, ry = 0) { obj.position.set(x, y, z); obj.rotation.y = ry; return obj; }
-
-// A rounded-rectangle outline as a THREE.Path or Shape, centred on (cx, cy).
-export function roundedRectPath(target, cx, cy, w, h, r) {
-  const x = cx - w / 2, y = cy - h / 2;
-  target.moveTo(x + r, y);
-  target.lineTo(x + w - r, y); target.quadraticCurveTo(x + w, y, x + w, y + r);
-  target.lineTo(x + w, y + h - r); target.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  target.lineTo(x + r, y + h); target.quadraticCurveTo(x, y + h, x, y + h - r);
-  target.lineTo(x, y + r); target.quadraticCurveTo(x, y, x + r, y);
-  return target;
-}

@@ -85,30 +85,36 @@ export function wallpaperCanvas() {
   wallpaper.width = w; wallpaper.height = h;
   const g = wallpaper.getContext("2d");
   const peaks = [[0.72, 0.3, 0.2, 1], [0.86, 0.58, 0.14, 0.7], [0.55, 0.62, 0.16, 0.55], [0.3, 0.85, 0.22, 0.45], [0.95, 0.12, 0.12, 0.5], [0.12, 0.25, 0.18, 0.25]];
-  const field = new Float32Array(w * h);
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const u = x / w, v = y / h * (h / w);
+  // The terrain is smooth, so work out its height on a grid every 4 px and interpolate between
+  // grid points: the same lines for a sixteenth of the work.
+  const S = 4, gw = Math.ceil(w / S) + 2, gh = Math.ceil(h / S) + 2;
+  const grid = new Float32Array(gw * gh);
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const u = (gx * S) / w, v = ((gy * S) / h) * (h / w);
     let e = 0;
-    for (const [px, py, s, a] of peaks) { const dx = u - px, dy = v - py * (h / w); e += a * Math.exp(-(dx * dx + dy * dy) / (2 * s * s)); }
+    for (const [px, py, sd, a] of peaks) { const dx = u - px, dy = v - py * (h / w); e += a * Math.exp(-(dx * dx + dy * dy) / (2 * sd * sd)); }
     e += 0.035 * Math.sin(u * 23 + Math.sin(v * 17) * 1.5) + 0.025 * Math.sin(v * 29 - u * 11);
-    field[y * w + x] = e * 26; // 26 contour intervals over the range
+    grid[gy * gw + gx] = e * 26; // 26 contour intervals over the range
   }
   const img = g.createImageData(w, h);
   const d = img.data;
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const i = y * w + x;
-    const t = (x / w) * 0.55 + (y / h) * 0.45;
-    // Base: deep navy toward slate.
-    let r = 11 + t * 12, gr = 18 + t * 20, b = 31 + t * 30;
-    const e = field[i];
-    const gx = (field[i + (x < w - 1 ? 1 : 0)] - field[i - (x > 0 ? 1 : 0)]) / 2;
-    const gy = (field[i + (y < h - 1 ? w : 0)] - field[i - (y > 0 ? w : 0)]) / 2;
-    const grad = Math.hypot(gx, gy) + 1e-4;
-    const dist = Math.abs(e - Math.round(e)) / grad; // pixels to the nearest contour
-    const index = Math.round(e) % 5 === 0;
-    const a = Math.max(0, 1 - dist / (index ? 1.1 : 0.7)) * (index ? 0.34 : 0.17);
-    r += (150 - r) * a; gr += (190 - gr) * a; b += (215 - b) * a;
-    d[i * 4] = r; d[i * 4 + 1] = gr; d[i * 4 + 2] = b; d[i * 4 + 3] = 255;
+  for (let y = 0; y < h; y++) {
+    const fy = y / S, iy = fy | 0, ty = fy - iy;
+    for (let x = 0; x < w; x++) {
+      const fx = x / S, ix = fx | 0, tx = fx - ix, k = iy * gw + ix;
+      const a = grid[k], b = grid[k + 1], c = grid[k + gw], dd = grid[k + gw + 1], q = a - b - c + dd;
+      const e = a + (b - a) * tx + (c - a) * ty + q * tx * ty;
+      const grad = Math.hypot((b - a + q * ty) / S, (c - a + q * tx) / S) + 1e-4;
+      const i = y * w + x;
+      const t = (x / w) * 0.55 + (y / h) * 0.45;
+      // Base: deep navy toward slate.
+      let r = 11 + t * 12, gr = 18 + t * 20, bl = 31 + t * 30;
+      const dist = Math.abs(e - Math.round(e)) / grad; // pixels to the nearest contour
+      const index = Math.round(e) % 5 === 0;
+      const al = Math.max(0, 1 - dist / (index ? 1.1 : 0.7)) * (index ? 0.34 : 0.17);
+      r += (150 - r) * al; gr += (190 - gr) * al; bl += (215 - bl) * al;
+      d[i * 4] = r; d[i * 4 + 1] = gr; d[i * 4 + 2] = bl; d[i * 4 + 3] = 255;
+    }
   }
   g.putImageData(img, 0, 0);
   return wallpaper;
@@ -335,6 +341,21 @@ export function createScreen({ onLeave, reduce, shelf }) {
     btn.addEventListener("click", () => openApp(btn.dataset.app));
   }
 
+  // The menu bar: one menu open at a time; choosing an item opens its window or link.
+  const menus = [...screen.querySelectorAll(".menu")].map((m) => ({ btn: $(".menu-btn", m), list: $(".menu-list", m) }));
+  const closeMenus = () => { let was = false; for (const m of menus) { if (!m.list.hidden) was = true; m.list.hidden = true; m.btn.setAttribute("aria-expanded", "false"); } return was; };
+  for (const m of menus) {
+    m.btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = m.list.hidden;
+      closeMenus();
+      if (open) { m.list.hidden = false; m.btn.setAttribute("aria-expanded", "true"); m.list.querySelector("button, a")?.focus({ preventScroll: true }); }
+    });
+    for (const item of m.list.querySelectorAll("button[data-app]")) item.addEventListener("click", () => { closeMenus(); openApp(item.dataset.app); });
+    for (const a of m.list.querySelectorAll("a")) a.addEventListener("click", () => closeMenus());
+  }
+  os.addEventListener("click", (e) => { if (!e.target.closest(".menu")) closeMenus(); });
+
   const resetLights = lightsGame($('[data-win="box"]', screen));
   let current = null;
   function openApp(id) {
@@ -381,11 +402,13 @@ export function createScreen({ onLeave, reduce, shelf }) {
     },
     place,
     hide() {
+      closeMenus();
       screen.classList.remove("on");
       closeApp();
       screen.hidden = true;
     },
     escape() {
+      if (closeMenus()) return true;
       if (current && !screen.classList.contains("compact")) { closeApp(); return true; }
       return false;
     },
