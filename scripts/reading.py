@@ -1,4 +1,4 @@
-"""Refresh reading/shelf.json, the book on the desk, from Joe's public Goodreads profile.
+"""Refresh data/shelf.json, the book on the desk, from Joe's public Goodreads profile.
 
 Goodreads gives no API keys to new apps, and its robots.txt disallows the shelf RSS
 feeds, but it allows the profile page (/user/show/...). That page lists the book being
@@ -9,7 +9,7 @@ The script validates what it parsed and exits 1 without writing anything if the 
 doesn't look like the profile (a sign-in wall, a changed layout), so a bad run leaves
 the last good shelf published.
 
-Run it with plain Python 3.10 or later; it uses only the standard library:
+Run it with plain Python 3.11 or later; it uses only the standard library:
 
     python3 scripts/reading.py
 """
@@ -27,8 +27,8 @@ from pathlib import Path
 PROFILE = "https://www.goodreads.com/user/show/164485726-joseph-lattanzi"
 NAME = "Joseph Lattanzi"
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "reading" / "shelf.json"
-COVERS = ROOT / "reading" / "covers"
+OUT = ROOT / "data" / "shelf.json"
+COVERS = ROOT / "data" / "covers"
 AGENT = "jlattanzi4.github.io reading shelf (+https://github.com/jlattanzi4/jlattanzi4.github.io)"
 BASE = "https://www.goodreads.com"
 
@@ -182,7 +182,7 @@ def save_covers(shelf: dict) -> None:
             if not data.startswith(b"\xff\xd8"):
                 raise ValueError(f"cover for {b['title']} is not a JPEG")
             path.write_bytes(data)
-        b["cover"] = f"reading/covers/{name}"
+        b["cover"] = f"data/covers/{name}"
         keep.add(name)
     for old in COVERS.glob("*.jpg"):
         if old.name not in keep:

@@ -1,4 +1,4 @@
-// The book Joe is reading, from his Goodreads shelf (reading/shelf.json, refreshed daily).
+// The book Joe is reading, from his Goodreads shelf (data/shelf.json, refreshed daily).
 // It lies closed with a lift ticket for a bookmark at his page. The page block is as thick
 // as the book is long, and it opens to that page: the read pages swing over to the left.
 
@@ -14,7 +14,7 @@ const img = (src) => new Promise((ok) => {
 // The shelf, the current book's cover, and spine colours for two favourites.
 export async function loadShelf() {
   try {
-    const res = await fetch("reading/shelf.json", { cache: "no-cache" });
+    const res = await fetch("data/shelf.json", { cache: "no-cache" });
     if (!res.ok) return null;
     const data = await res.json();
     const current = data.reading?.[0] || null;
