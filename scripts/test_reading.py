@@ -1,6 +1,6 @@
 """The Goodreads profile parser, against a trimmed copy of the real page.
 
-    uv run --no-project --with pytest pytest scripts -q
+uv run --no-project --with pytest pytest scripts -q
 """
 
 from pathlib import Path

@@ -58,7 +58,7 @@ const SCREEN_CENTER = new THREE.Vector3(0, 1.08, -0.5915);
 const SCREEN_W = 0.62, SCREEN_H = 0.3488;
 const view = { pos: new THREE.Vector3(), target: new THREE.Vector3() };
 let mode = "desk"; // desk | moving | screen | inspect
-const look2 = { x: 0, y: 0, tx: 0, ty: 0, pan: 0, panTo: 0 };
+const gaze = { x: 0, y: 0, tx: 0, ty: 0, pan: 0, panTo: 0 };
 
 // On a phone the view is narrow, so it frames the monitor and keyboard and a swipe looks around.
 const tallView = () => camera.aspect < 0.9;
@@ -97,10 +97,10 @@ function applyView() {
   const pos = view.pos.clone(), target = view.target.clone();
   if (mode === "desk" && tallView()) {
     // A swipe turns your head toward either end of the desk.
-    pos.x += look2.pan * 0.12; target.x += look2.pan * 0.42;
+    pos.x += gaze.pan * 0.12; target.x += gaze.pan * 0.42;
   } else if (mode === "desk" && !motion.reduce) {
-    pos.x += look2.x * 0.05; pos.y += look2.y * 0.025;
-    target.x += look2.x * 0.02; target.y += look2.y * 0.012;
+    pos.x += gaze.x * 0.05; pos.y += gaze.y * 0.025;
+    target.x += gaze.x * 0.02; target.y += gaze.y * 0.012;
   }
   camera.position.copy(pos);
   camera.lookAt(target);
@@ -128,10 +128,16 @@ async function moveTo(pose, ms = 950) {
   }, "inOut");
 }
 
+// Whatever had keyboard focus before leaning in gets it back afterwards.
+let returnFocus = null;
+const rememberFocus = () => { returnFocus = document.activeElement?.classList.contains("spot") ? document.activeElement : null; };
+const restoreFocus = () => { returnFocus?.focus({ preventScroll: true }); returnFocus = null; };
+
 // -------------------------------------------------------------- desktop
 const desktop = createScreen({ reduce: () => motion.reduce, shelf });
 async function lookAtScreen(app) {
   if (mode === "moving") return;
+  rememberFocus();
   mode = "moving";
   hideLabel(); hint.classList.add("gone");
   await moveTo(screenPose());
@@ -152,6 +158,7 @@ async function backToDesk() {
   mode = "moving";
   await moveTo(homePose(), 850);
   mode = "desk";
+  restoreFocus();
 }
 
 // ------------------------------------------------------ a closer look
@@ -159,6 +166,7 @@ let inspecting = null;
 async function inspect(id) {
   if (mode !== "desk") return;
   const item = items[id];
+  rememberFocus();
   mode = "moving";
   inspecting = item;
   hideLabel(); hint.classList.add("gone");
@@ -200,6 +208,7 @@ async function leaveInspect() {
   await moveTo(homePose(), 850);
   inspecting = null;
   mode = "desk";
+  restoreFocus();
 }
 
 back.addEventListener("click", backToDesk);
@@ -261,15 +270,15 @@ canvas.addEventListener("pointermove", (e) => {
   const r = canvas.getBoundingClientRect();
   if (e.pointerType === "mouse") {
     pointer.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    look2.tx = pointer.x; look2.ty = pointer.y;
+    gaze.tx = pointer.x; gaze.ty = pointer.y;
   }
   if (downAt && tallView() && e.pointerType !== "mouse") {
-    look2.panTo = Math.max(-1, Math.min(1, downAt.pan - (e.clientX - downAt.x) / (r.width * 0.6)));
+    gaze.panTo = Math.max(-1, Math.min(1, downAt.pan - (e.clientX - downAt.x) / (r.width * 0.6)));
   }
 });
-canvas.addEventListener("pointerleave", () => { pointer.set(9, 9); look2.tx = 0; look2.ty = 0; });
+canvas.addEventListener("pointerleave", () => { pointer.set(9, 9); gaze.tx = 0; gaze.ty = 0; });
 let downAt = null;
-canvas.addEventListener("pointerdown", (e) => { downAt = { x: e.clientX, y: e.clientY, pan: look2.panTo }; });
+canvas.addEventListener("pointerdown", (e) => { downAt = { x: e.clientX, y: e.clientY, pan: gaze.panTo }; });
 canvas.addEventListener("pointerup", (e) => {
   if (!downAt || Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) > 6) return;
   downAt = null;
@@ -356,9 +365,9 @@ function frame(now) {
   if (!running) return;
   requestAnimationFrame(frame);
   stepTweens(now);
-  look2.x += (look2.tx - look2.x) * 0.05;
-  look2.y += (look2.ty - look2.y) * 0.05;
-  look2.pan += (look2.panTo - look2.pan) * 0.12;
+  gaze.x += (gaze.tx - gaze.x) * 0.05;
+  gaze.y += (gaze.ty - gaze.y) * 0.05;
+  gaze.pan += (gaze.panTo - gaze.pan) * 0.12;
   applyView();
 
   const hit = pointer.x > 2 ? null : pick();

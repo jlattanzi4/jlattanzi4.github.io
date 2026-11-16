@@ -2,7 +2,7 @@
 // for how hard it should think. A small OLED answers. The Accept key is worn shiny.
 
 import * as THREE from "three";
-import { tween, canvasTexture, mesh, box, roundRect } from "./kit.js";
+import { tween, canvasTexture, mesh, box } from "./kit.js";
 
 const KEYS = [
   { id: "accept", label: "Accept", cap: "#5f7f63", ink: "#e7efe2", worn: true, glow: "#7dffa0", says: ["accepted", "tests pass. shipping it"] },

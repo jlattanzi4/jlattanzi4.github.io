@@ -5,8 +5,6 @@
 import * as THREE from "three";
 import { TOP, motion, tween, lerp, canvasTexture, rng, wrapText, M, P, box, mesh, at, roundedRectPath } from "./kit.js";
 
-export { TOP, motion, tween, stepTweens } from "./kit.js";
-
 // ----------------------------------------------------------- textures
 
 // Oiled walnut, five boards running left to right. One pass draws the colour, a second the
