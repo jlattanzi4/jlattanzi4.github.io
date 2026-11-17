@@ -42,17 +42,19 @@ const tier = quality();
 renderer.setPixelRatio(tier.pixelRatio);
 
 const scene = new THREE.Scene();
-const [shelf, graph, record] = await Promise.all([loadShelf(), loadGithub(), fetchJSON("data/survivor.json"), fontsReady]);
+const [shelf, graph, record, music] = await Promise.all([loadShelf(), loadGithub(), fetchJSON("data/survivor.json"), fetchJSON("data/music.json"), fontsReady]);
 performance.mark("desk:data");
 
 const screenTex = screenTexture();
-const { items, updates, onMat } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines, lastWatered: graph?.last_contribution });
+const { items, updates, onMat, pods } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines, lastWatered: graph?.last_contribution });
 items.watch = buildWatch(scene, { x: -0.335, y: TOP, z: -0.43, ry: -0.35 });
 items.macropad = buildMacropad(scene, { x: 0.325, y: onMat, z: -0.262, ry: -0.04 });
 const book = buildBook(scene, shelf, { x: -0.54, z: -0.385, ry: 0.28 });
 if (book) items.book = book;
 items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
 items.football.note = recordLine(record);
+// The AirPods are just AirPods, unless Spotify has told the desk what's been on repeat.
+if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url };
 items.departures = buildDepartures(scene, { x: 0.215, y: TOP, z: -0.72, ry: -0.2 });
 
 // --------------------------------------------------------------- camera
@@ -341,7 +343,7 @@ async function activate(id) {
 
 // Keyboard users reach every object through buttons laid over the scene:
 // the computer first, then the projects, the things that are mine, the ways to reach me, and the rest.
-const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "departures", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
+const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "departures", "pods", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
 const spots = TAB_ORDER.filter((id) => items[id]).map((id) => items[id]).map((item) => {
   const b = document.createElement("button");
   b.type = "button";

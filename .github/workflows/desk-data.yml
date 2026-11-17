@@ -2,7 +2,8 @@ name: Refresh the desk
 
 # Some things on the desk come from elsewhere: the book I'm reading (from my Goodreads
 # profile), the contribution graph on the wall and the day the snake plant was last watered
-# (from GitHub), and the NFL optimizer's own season (from that repo's history). Once a day
+# (from GitHub), the NFL optimizer's own season (from that repo's history), and what I've
+# had on repeat (from Spotify). Once a day
 # is plenty. The graph covers full weeks to last Saturday, so it only changes once a week.
 
 on:
@@ -47,6 +48,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/github.py
+      # Does nothing until the three Spotify secrets are set (scripts/spotify_auth.py).
+      - name: Read what's on repeat
+        id: spotify
+        continue-on-error: true
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+        run: python3 scripts/spotify.py
       - name: Grade the NFL optimizer's own season
         id: survivor
         continue-on-error: true
@@ -63,7 +73,7 @@ jobs:
             git push
           fi
       - name: Report a failed refresh
-        if: steps.reading.outcome == 'failure' || steps.github.outcome == 'failure' || steps.survivor.outcome == 'failure'
+        if: steps.reading.outcome == 'failure' || steps.github.outcome == 'failure' || steps.survivor.outcome == 'failure' || steps.spotify.outcome == 'failure'
         run: |
-          echo "Goodreads: ${{ steps.reading.outcome }}, GitHub: ${{ steps.github.outcome }}, NFL: ${{ steps.survivor.outcome }}"
+          echo "Goodreads: ${{ steps.reading.outcome }}, GitHub: ${{ steps.github.outcome }}, NFL: ${{ steps.survivor.outcome }}, Spotify: ${{ steps.spotify.outcome }}"
           exit 1

@@ -677,7 +677,7 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
   }
   cable([...coil, [0.5, F, -0.47], [0.57, F, -0.6], [0.6, F, -0.76], [0.61, F, -0.845], [0.61, TOP - 0.03, -0.858], [0.61, TOP - 0.3, -0.858]], 0.0018, "#2a3a4a");
 
-  return { items, updates, onMat: ON_MAT };
+  return { items, updates, onMat: ON_MAT, pods };
 }
 
 // ------------------------------------------------------- a brick-built F1 car
