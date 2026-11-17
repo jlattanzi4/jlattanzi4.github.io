@@ -3,7 +3,7 @@
 // the desk top is at y = TOP and the viewer sits at its front edge, looking toward −z.
 
 import * as THREE from "three";
-import { TOP, motion, tween, lerp, clamp, canvasTexture, rng, wrapText, M, P, box, mesh, at } from "./kit.js";
+import { TOP, motion, tween, lerp, clamp, canvasTexture, rng, wrapText, M, P, box, mesh, at, moved } from "./kit.js";
 
 // ----------------------------------------------------------- textures
 
@@ -391,7 +391,7 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
         dirty = true;
       }
     }
-    if (dirty) keys.instanceMatrix.needsUpdate = true;
+    if (dirty) { keys.instanceMatrix.needsUpdate = true; moved(); }
   });
   items.keyboard = { root: kb, label: "Keyboard", sub: "Type on yours and watch. Try “coffee”", pressKey };
 
@@ -935,6 +935,11 @@ function airpodsCase(lit = false) {
   lying.rotation.x = REST;
   lying.position.set(0, D / 2, H / 2); // resting on its back, centred where it sits
   root.add(lying);
+  // What the pointer hits: a still, invisible box around the case at rest and open, so the
+  // case moving out from under the pointer doesn't end the hover (and close it, and open it).
+  const reach = new THREE.Mesh(new THREE.BoxGeometry(W, 0.06, H), new THREE.MeshBasicMaterial({ visible: false }));
+  reach.position.y = 0.03;
+  root.add(reach);
   // Hovered (k from 0 to 1): picked up and tipped toward you with the lid swung open, the way
   // you'd hold it to take a bud out. Lying flat, the lid would open into the desk.
   root.userData.open = (k) => {

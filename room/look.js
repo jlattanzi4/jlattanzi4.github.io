@@ -19,7 +19,7 @@ import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUnifo
 import { HorizontalBlurShader } from "three/addons/shaders/HorizontalBlurShader.js";
 import { VerticalBlurShader } from "three/addons/shaders/VerticalBlurShader.js";
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js";
-import { TOP, canvasTexture, rng, tweening } from "./kit.js";
+import { TOP, canvasTexture, rng, tweening, takeMoved } from "./kit.js";
 import { createWindowLight } from "./window.js";
 
 const LAMP = { colour: "#ffad66", intensity: 0.9 };    // about 2700 K
@@ -96,6 +96,8 @@ export function createLook(renderer, scene, camera, items, tier) {
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.45;
   renderer.shadowMap.enabled = true;
+  renderer.shadowMap.autoUpdate = false; // redrawn only when something moved (render(), below)
+  renderer.shadowMap.needsUpdate = true;
   // Plain PCF, so each light can have its own softness: the lamp and the bar are big, soft sources.
   renderer.shadowMap.type = THREE.PCFShadowMap;
   scene.background = new THREE.Color("#050505");
@@ -322,6 +324,7 @@ export function createLook(renderer, scene, camera, items, tier) {
       // Contact shadows only change when something moves.
       if (tweening()) contactFrames = 2;
       if (contactFrames > 0) { contact(); contactFrames--; }
+      if (takeMoved()) renderer.shadowMap.needsUpdate = true;
       composer.render();
     },
   };

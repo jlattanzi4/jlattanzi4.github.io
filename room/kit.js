@@ -22,7 +22,14 @@ export function tween(duration, onUpdate, curve = "inOut") {
   });
 }
 export const tweening = () => tweens.size > 0;
+// Shadow maps are redrawn only on frames where something that casts a shadow moved, since the
+// three shadow-casting lights redrawn every frame were two thirds of the GPU's work. Every tween
+// counts (stepTweens); anything else that moves a caster calls moved().
+let movedSinceShadows = true;
+export const moved = () => { movedSinceShadows = true; };
+export const takeMoved = () => { const m = movedSinceShadows; movedSinceShadows = false; return m; };
 export function stepTweens(now) {
+  if (tweens.size) movedSinceShadows = true;
   for (const t of tweens) {
     // A frame's timestamp can come from just before the tween started; never go below 0.
     const p = Math.min(1, Math.max(0, (now - t.start) / t.duration));
