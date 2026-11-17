@@ -1,7 +1,7 @@
 // Sitting at the desk. The camera is your head; everything on the desk does something.
 
 import * as THREE from "three";
-import { TOP, motion, tween, stepTweens, fetchJSON } from "./kit.js";
+import { TOP, motion, tween, stepTweens, fetchJSON, moved } from "./kit.js";
 import { buildDesk } from "./props.js";
 import { buildWatch } from "./watch.js";
 import { loadShelf, buildBook } from "./book.js";
@@ -451,10 +451,13 @@ function frame(now) {
   for (const item of Object.values(items)) {
     const want = item.id === hovered && mode === "desk" && !NO_LIFT.has(item.id) && !item.decor && !busy ? 0.008 : 0;
     item.lift += (want - item.lift) * 0.2;
-    if (Math.abs(item.lift) > 1e-5 || want) item.root.position.y = item.baseY + item.lift;
+    if (Math.abs(item.lift) > 1e-5 || want) {
+      const y = item.baseY + item.lift;
+      if (Math.abs(item.root.position.y - y) > 1e-6) { item.root.position.y = y; moved(); }
+    }
     if (item.hover) {
       const on = item.id === hovered && mode === "desk" && !busy ? 1 : 0;
-      if (on || item.hoverK > 1e-4) { item.hoverK += (on - item.hoverK) * 0.12; item.hover(item.hoverK); }
+      if (Math.abs(on - item.hoverK) > 1e-4) { item.hoverK += (on - item.hoverK) * 0.12; item.hover(item.hoverK); moved(); }
     }
   }
   for (const u of updates) u(now);

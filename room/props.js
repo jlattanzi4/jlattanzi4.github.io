@@ -3,7 +3,7 @@
 // the desk top is at y = TOP and the viewer sits at its front edge, looking toward −z.
 
 import * as THREE from "three";
-import { TOP, motion, tween, lerp, clamp, canvasTexture, rng, wrapText, M, P, box, mesh, at } from "./kit.js";
+import { TOP, motion, tween, lerp, clamp, canvasTexture, rng, wrapText, M, P, box, mesh, at, moved } from "./kit.js";
 
 // ----------------------------------------------------------- textures
 
@@ -391,7 +391,7 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
         dirty = true;
       }
     }
-    if (dirty) keys.instanceMatrix.needsUpdate = true;
+    if (dirty) { keys.instanceMatrix.needsUpdate = true; moved(); }
   });
   items.keyboard = { root: kb, label: "Keyboard", sub: "Type on yours and watch. Try “coffee”", pressKey };
 
