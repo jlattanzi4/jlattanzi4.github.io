@@ -12,6 +12,7 @@ import { buildDrafts } from "./drafts.js";
 import { createLook, quality } from "./look.js";
 import { createScreen, screenTexture, theCall, recordLine, wallpaperCanvas } from "./screen.js";
 import { bostonSky } from "./window.js";
+import { bostonClock } from "./sun.js";
 
 performance.mark("desk:modules");
 const room = document.getElementById("room");
@@ -66,7 +67,8 @@ items.drafts = buildDrafts(scene, { x: -0.655, y: TOP, z: -0.79 }); // the back 
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
-const look = createLook(renderer, scene, camera, items, tier);
+// The light follows Boston's sun: now, or the time in ?at= (17:30, or a full date and time).
+const look = createLook(renderer, scene, camera, items, tier, bostonClock(location.search));
 performance.mark("desk:built");
 
 const HOME_TARGET = new THREE.Vector3(0, 0.95, -0.42);
@@ -314,7 +316,21 @@ canvas.addEventListener("pointerup", (e) => {
   if (hit) activate(hit.id);
 });
 
-async function setLight(which, on) {
+// The lamp and the light bar start the way Boston's light has them (the lamp off by day, on
+// at dusk or on a dark, rainy afternoon) and follow the day, until you switch one yourself.
+const byHand = { lamp: false, bar: false };
+function lightsByDay(instant) {
+  const lit = look.daylight;
+  for (const which of ["lamp", "bar"]) {
+    if (byHand[which] || (look.state[which] > 0.5) === lit[which]) continue;
+    items[which === "lamp" ? "lamp" : "lightbar"].sub = lit[which] ? "Switch it off" : "Switch it on";
+    if (instant) { look.state[which] = lit[which] ? 1 : 0; look.apply(); } else setLight(which, lit[which], true);
+  }
+}
+lightsByDay(true);
+
+async function setLight(which, on, byDay = false) {
+  if (!byDay) byHand[which] = true;
   const from = look.state[which], to = on ? 1 : 0;
   await tween(motion.reduce ? 0 : 450, (k) => { look.state[which] = from + (to - from) * k; look.apply(); }, "inOut");
   look.captureLight();
@@ -514,8 +530,13 @@ requestAnimationFrame(() => requestAnimationFrame(() => look.captureLight()));
 setTimeout(() => look.captureLight(), 1500); // again once everything has drawn once
 setTimeout(() => theCall().catch(() => {}), 1500); // warm up this week's pick in the background
 // Boston's sky, through the window and in the menu bar, again every 15 minutes.
-const lookOutside = () => bostonSky().then((sky) => { if (!sky) return; look.sky.setSky(sky); screenTex.setSky(sky); desktop.setSky(sky); });
+const lookOutside = () => bostonSky().then((sky) => {
+  if (!sky) return;
+  look.sky.setSky(sky); screenTex.setSky(sky); desktop.setSky(sky);
+  requestAnimationFrame(() => requestAnimationFrame(() => lightsByDay(false))); // once the light has taken in the weather
+});
 setTimeout(lookOutside, 1200);
 setTimeout(() => items.departures.start(), 1300);
 setInterval(lookOutside, 15 * 60 * 1000);
+setInterval(() => lightsByDay(false), 60 * 1000);
 if (new URLSearchParams(location.search).has("debug")) Object.assign(window, { desk: { THREE, scene, camera, renderer, look, items, inspect, leaveInspect } });

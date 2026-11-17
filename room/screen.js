@@ -2,10 +2,14 @@
 // and the real desktop that takes over when you lean in (HTML, scaled to the screen).
 
 import * as THREE from "three";
-import { moonPhase, drawMoon, skyLine, skySentence } from "./window.js";
+import { moonPhase, drawMoon, drawSun, skyLine, skySentence } from "./window.js";
+import { sunPosition, bostonClock } from "./sun.js";
 import { callWeek, weekOf, LAST_WEEK } from "./call-week.js";
 
 export const OS_W = 1280, OS_H = 720;
+// Is the sun up in Boston (or at the time in ?at=)? The menu bar shows the sun, or the moon.
+const skyClock = bostonClock(location.search);
+const sunUp = () => sunPosition(skyClock()).elevation > 0;
 const $ = (sel, root = document) => root.querySelector(sel);
 const pct = (v, d = 1) => `${(100 * v).toFixed(d)}%`;
 
@@ -138,10 +142,10 @@ export function paintIdle(canvas) {
   g.fillStyle = "rgba(255,255,255,0.75)"; g.font = "400 15px 'Instrument Sans', sans-serif";
   g.fillText("Projects", 158, 15); g.fillText("Contact", 230, 15);
   g.textAlign = "right"; g.fillStyle = "#fff"; g.fillText(clockText(), w - 20, 15);
-  const moon = moonPhase(), wx = skyLine(skyNow, moon);
+  const moon = moonPhase(), up = sunUp(), wx = skyLine(skyNow, moon, up);
   const wxRight = w - 20 - g.measureText(clockText()).width - 22;
   g.fillStyle = "rgba(255,255,255,0.75)"; g.fillText(wx, wxRight, 15);
-  drawMoon(g, wxRight - g.measureText(wx).width - 13, 15, 6.5, moon);
+  if (up) drawSun(g, wxRight - g.measureText(wx).width - 13, 15, 7.5); else drawMoon(g, wxRight - g.measureText(wx).width - 13, 15, 6.5, moon);
   g.textAlign = "left";
   // the name
   g.textBaseline = "alphabetic"; g.fillStyle = "#fff";
@@ -389,12 +393,12 @@ export function createScreen({ onLeave, reduce, shelf, record }) {
   const wx = $("#wx", screen);
   const tick = () => {
     clock.textContent = clockText();
-    const moon = moonPhase();
+    const moon = moonPhase(), up = sunUp();
     const c = $("canvas", wx), g = c.getContext("2d");
     g.clearRect(0, 0, c.width, c.height);
-    drawMoon(g, c.width / 2, c.height / 2, c.width / 2 - 2, moon);
-    $("span", wx).textContent = skyLine(skyNow, moon);
-    wx.title = skySentence(skyNow, moon);
+    if (up) drawSun(g, c.width / 2, c.height / 2, c.width / 2 - 1); else drawMoon(g, c.width / 2, c.height / 2, c.width / 2 - 2, moon);
+    $("span", wx).textContent = skyLine(skyNow, moon, up);
+    wx.title = skySentence(skyNow, moon, up);
   };
   tick(); setInterval(tick, 20000);
 

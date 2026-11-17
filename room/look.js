@@ -19,7 +19,8 @@ import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUnifo
 import { HorizontalBlurShader } from "three/addons/shaders/HorizontalBlurShader.js";
 import { VerticalBlurShader } from "three/addons/shaders/VerticalBlurShader.js";
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js";
-import { TOP, canvasTexture, rng, tweening, takeMoved } from "./kit.js";
+import { TOP, canvasTexture, rng, tweening, takeMoved, moved } from "./kit.js";
+import { sunPosition, daylight } from "./sun.js";
 import { createWindowLight } from "./window.js";
 
 const LAMP = { colour: "#ffad66", intensity: 0.9 };    // about 2700 K
@@ -93,7 +94,7 @@ export function quality() {
   };
 }
 
-export function createLook(renderer, scene, camera, items, tier) {
+export function createLook(renderer, scene, camera, items, tier, clock = () => new Date()) {
   renderer.toneMapping = THREE.AgXToneMapping;
   renderer.toneMappingExposure = 1.45;
   renderer.shadowMap.enabled = true;
@@ -181,7 +182,7 @@ export function createLook(renderer, scene, camera, items, tier) {
   let envRT = pmrem.fromCubemap(cubeRT.texture);
   scene.environment = envRT.texture;
   scene.environmentIntensity = 0.55;
-  function captureLight() {
+  function photograph() {
     dust.visible = false;
     probe.update(renderer, scene);
     dust.visible = true;
@@ -270,12 +271,42 @@ export function createLook(renderer, scene, camera, items, tier) {
   }
   apply();
 
+  // ---- Boston's daylight (room/sun.js): the window's light, the fill, the exposure, the LED
+  // strip and the bloom follow the sun. Worked out once a minute, and as soon as new weather
+  // comes in; the light only moves a little in a minute, so there's no need to ease it.
+  const ACROSS = new THREE.Vector3(1.1, 0, 1.5).normalize(); // the window's direction, level
+  let lit = null, litAt = -Infinity, litWeather = -1, litAngle = null, shot = null;
+  const windowColour = new THREE.Color(), sunColour = new THREE.Color();
+  function readDaylight(now) {
+    lit = daylight(sunPosition(clock()).elevation, sky.cover);
+    litAt = now; litWeather = sky.version;
+    night.color.setRGB(...lit.fillSky); night.groundColor.setRGB(...lit.fillGround); night.intensity = lit.fill;
+    renderer.toneMappingExposure = lit.exposure;
+    bias.intensity = lit.bias;
+    bloom.threshold = lit.bloom;
+    sunColour.setRGB(...lit.windowColour);
+    if (litAngle === null || Math.abs(lit.angle - litAngle) > 0.05) {
+      const a = lit.angle * Math.PI / 180;
+      moon.position.copy(moon.target.position).addScaledVector(ACROSS.clone().multiplyScalar(Math.cos(a)).setY(Math.sin(a)), 3.4);
+      litAngle = lit.angle;
+      moved(); // the shadows fall a new way
+    }
+    // Reflections are a photograph of the lit desk: retake it when the light has changed enough.
+    if (shot && (Math.abs(shot.exposure - lit.exposure) > 0.03 || Math.abs(shot.fill - lit.fill) > 0.08 || Math.abs(shot.window - lit.window) > 3)) captureLight();
+  }
+  function captureLight() {
+    photograph();
+    shot = { exposure: lit.exposure, fill: lit.fill, window: lit.window };
+  }
+  readDaylight(-Infinity);
+
   let time = 0;
   return {
     composer,
     state,
     apply,
     captureLight,
+    get daylight() { return lit; },
     sky,
     // Compile every material for the buffer the desk is actually drawn into. A shader drawn to
     // the screen is a different program from one drawn to a buffer (tone mapping, colour space),
@@ -325,8 +356,11 @@ export function createLook(renderer, scene, camera, items, tier) {
       }
       dust.visible = state.lamp > 0.01;
       const through = sky.update(now, reduce);
-      moon.intensity = through.intensity;
-      moon.color.copy(through.colour);
+      if (now - litAt > 60000 || sky.version !== litWeather) readDaylight(now);
+      // Through the window: the moon's share, and the sun's (or the dusk sky's) on top.
+      const moonK = through.intensity * lit.moon, sunK = lit.window;
+      moon.intensity = moonK + sunK;
+      moon.color.copy(through.colour).multiplyScalar(moonK).add(windowColour.copy(sunColour).multiplyScalar(sunK)).multiplyScalar(1 / Math.max(1e-6, moonK + sunK));
       time = (time + 1) % 997;
       grade.uniforms.time.value = reduce ? 0 : time;
       // Contact shadows only change when something moves.

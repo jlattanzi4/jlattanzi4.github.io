@@ -2,7 +2,7 @@
 
 Joseph Lattanzi's portfolio: https://jlattanzi4.github.io/
 
-You sit at my desk, late in the evening. Everything on it does something:
+You sit at my desk, in Boston's light right now: the sun through the window by day, the lamp at night. Everything on it does something:
 
 | On the desk | What it does |
 |---|---|
@@ -16,11 +16,11 @@ You sit at my desk, late in the evening. Everything on it does something:
 | A framed print of my GitHub contributions | A year of commits, refreshed weekly. Opens my profile |
 | A macro pad | Accept, Continue, Reject and an effort knob, for working with an AI agent. Guess which key is worn shiny |
 | Sticky notes on the monitor | Email, LinkedIn |
-| The desk lamp and the monitor light | Switch on and off |
+| The desk lamp and the monitor light | Switch on and off. By day they start off; at dusk, or on a dark, rainy afternoon, the lamp comes on |
 | The keyboard | Its keys go down when you type on yours, and a few words do things |
 | An espresso | A sip at a time. When it's empty, click for another |
 | A snake plant | Watered with every commit: the longer since my last contribution on GitHub, the more it wilts |
-| The window (you only see its light) | Boston's sky, right now: rain runs down the wall, snow banks up on the sill, the moon is in its real phase. The monitor's menu bar says the weather |
+| The window (you only see its light) | Boston's sky, right now: the sun comes in at its real height, low and gold near sunset and white at noon, and cloud greys it; rain runs down the wall, snow banks up on the sill, and at night the moon is in its real phase. The monitor's menu bar says the weather |
 | A little LED sign | The next Red Line trains from Broadway and the Bluebikes dock outside, live |
 | The AirPods | What I've had on repeat lately, from Spotify; the case's light is green while it's connected. Click to listen |
 | A wastebasket in the corner | Crumpled drafts: things I tried and cut. Fish one out and it uncrumples to say why |
@@ -33,10 +33,11 @@ The same work is also a plain list: "See it as a list" pulls it over the desk, a
 
 [three.js](https://threejs.org/) from a CDN, no build step. Everything is modeled from simple shapes at real-world size, in meters, with textures drawn on canvases.
 
-- `room/look.js`: the lighting and the camera's side of the picture. Every light has a source you can see: the desk lamp, the light bar on the monitor, the screen, an LED strip behind the monitor, and moonlight from a window behind your right shoulder. Rendered in linear HDR at a Retina screen's full resolution (stepping down if the GPU can't keep up, with 4x MSAA below 2x), with soft shadows (redrawn only on frames where something moves, since the three shadow-casting lights were two thirds of each frame's work), contact shadows where things meet the desk, bloom on light sources only, AgX tone mapping, a light probe of the lit desk for reflections, and a little lens fringing, vignette and grain.
+- `room/look.js`: the lighting and the camera's side of the picture. Every light has a source you can see: the desk lamp, the light bar on the monitor, the screen, an LED strip behind the monitor, and a window behind your right shoulder, which lets in the moon at night and the sun by day. Rendered in linear HDR at a Retina screen's full resolution (if the GPU can't keep up, it drops MSAA and then steps down; otherwise 4x MSAA below 2x), with soft shadows (redrawn only on frames where something moves, since the three shadow-casting lights were two thirds of each frame's work), contact shadows where things meet the desk, bloom on light sources only, AgX tone mapping, a light probe of the lit desk for reflections, and a little lens fringing, vignette and grain.
 - `room/props.js`: the room, the desk, and most of what's on it.
 - `room/watch.js`, `room/book.js`, `room/github.js`, `room/macropad.js`, `room/departures.js`, `room/drafts.js`: the objects with more going on.
-- `room/window.js`: the window. The moonlight is a spotlight carrying a picture of the window (its panes, and rain, snow or lightning, redrawn as they move) that it throws on the wall, set by Open-Meteo's current weather for Boston; the moon's phase is worked out here.
+- `room/window.js`: the window. Its light is a spotlight carrying a picture of the window (its panes, and rain, snow or lightning, redrawn as they move) that it throws on the wall, set by Open-Meteo's current weather for Boston; the moon's phase is worked out here.
+- `room/sun.js`: where the sun is over Boston (NOAA's approximation, within a quarter of a degree of the astral library) and how the room is lit by it: four looks (night, blue hour, golden hour, day) blended by the sun's height, with cloud dimming and greying the sun. Add `?at=17:30` (Boston time) or `?at=` and a full date and time to see the desk at another moment.
 - `room/screen.js`: the monitor's desktop, painted onto the screen from the chair and shown as real HTML when you lean in, plus the live parts (the NFL pick, the redline, the start lights, the reading shelf).
 
 To load quickly it fetches the whole module graph at once (`modulepreload`) and compiles every shader once, for the buffer the desk is drawn into, off the main thread where the browser allows. Materials that differ only in which maps they have get a plain white map, so they share a program: on a first visit, compiling is most of the wait. It photographs the desk for reflections only after the first frame.
