@@ -7,6 +7,7 @@ import { buildWatch } from "./watch.js";
 import { loadShelf, buildBook } from "./book.js";
 import { buildMacropad } from "./macropad.js";
 import { loadGithub, buildGithubPrint } from "./github.js";
+import { buildDepartures } from "./departures.js";
 import { createLook, quality } from "./look.js";
 import { createScreen, screenTexture, theCall, recordLine } from "./screen.js";
 import { bostonSky } from "./window.js";
@@ -52,6 +53,7 @@ const book = buildBook(scene, shelf, { x: -0.54, z: -0.385, ry: 0.28 });
 if (book) items.book = book;
 items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
 items.football.note = recordLine(record);
+items.departures = buildDepartures(scene, { x: 0.215, y: TOP, z: -0.72, ry: -0.2 });
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
@@ -339,7 +341,7 @@ async function activate(id) {
 
 // Keyboard users reach every object through buttons laid over the scene:
 // the computer first, then the projects, the things that are mine, the ways to reach me, and the rest.
-const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
+const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "departures", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
 const spots = TAB_ORDER.filter((id) => items[id]).map((id) => items[id]).map((item) => {
   const b = document.createElement("button");
   b.type = "button";
@@ -454,5 +456,6 @@ setTimeout(() => theCall().catch(() => {}), 1500); // warm up this week's pick i
 // Boston's sky, through the window and in the menu bar, again every 15 minutes.
 const lookOutside = () => bostonSky().then((sky) => { if (!sky) return; look.sky.setSky(sky); screenTex.setSky(sky); desktop.setSky(sky); });
 setTimeout(lookOutside, 1200);
+setTimeout(() => items.departures.start(), 1300);
 setInterval(lookOutside, 15 * 60 * 1000);
 if (new URLSearchParams(location.search).has("debug")) Object.assign(window, { desk: { THREE, scene, camera, renderer, look, items, inspect, leaveInspect } });
