@@ -55,7 +55,7 @@ items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
 items.football.note = recordLine(record);
 // The AirPods are just AirPods, unless Spotify has told the desk what's been on repeat.
 if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url };
-items.departures = buildDepartures(scene, { x: 0.215, y: TOP, z: -0.72, ry: -0.2 });
+items.departures = buildDepartures(scene, { x: 0.68, y: TOP, z: -0.42, ry: -0.55 });
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
@@ -369,6 +369,39 @@ addEventListener("keydown", (e) => { if (typing(e)) items.keyboard.pressKey(e.co
 addEventListener("keyup", (e) => { items.keyboard.pressKey(e.code, false); });
 addEventListener("blur", () => { for (const c of ["ShiftLeft", "MetaLeft", "AltLeft", "ControlLeft"]) items.keyboard.pressKey(c, false); });
 
+// A few words, typed at the desk, do things. The keyboard's label gives away the first.
+let saying = null; // a label that's speaking up, which hovering doesn't replace until it's done
+function say(id, text, ms = 3200) {
+  const item = items[id], sub = item.sub;
+  item.sub = text;
+  saying = id;
+  showLabel(id);
+  setTimeout(() => {
+    item.sub = sub;
+    saying = null;
+    if (hovered) showLabel(hovered); else hideLabel();
+  }, ms);
+}
+const WORDS = {
+  coffee: () => items.cup.refill(),
+  espresso: () => items.cup.refill(),
+  lights: () => { const on = look.state.lamp < 0.5; items.lamp.sub = on ? "Switch it off" : "Switch it on"; return setLight("lamp", on); },
+  "box box": () => items.car.lap(),
+  touchdown: () => items.football.spin(),
+  water: () => say("plant", "Nice try. It only drinks commits"),
+};
+let typed = "";
+addEventListener("keydown", async (e) => {
+  if (!typing(e) || e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1 || mode !== "desk" || listOpen()) return;
+  typed = (typed + e.key.toLowerCase()).slice(-12);
+  const word = Object.keys(WORDS).find((w) => typed.endsWith(w));
+  if (!word || busy) return;
+  typed = "";
+  hint.classList.add("gone");
+  busy = true;
+  try { await WORDS[word](); } finally { busy = false; }
+});
+
 // ------------------------------------------------ the list, as a sheet over the desk
 // The sheet opens and closes by itself (it's #list, styled with :target), so it works before
 // this script has run. Here: Esc closes it, Tab stays inside it, and the desk stops drawing.
@@ -409,8 +442,8 @@ function frame(now) {
   } else if (id !== hovered && !document.activeElement?.classList.contains("spot")) {
     hovered = id;
     canvas.style.cursor = id && !items[id].decor ? "pointer" : ""; // decor has a label, nothing to click
-    if (id) showLabel(id); else hideLabel();
-  } else if (hovered && mode === "desk") showLabel(hovered);
+    if (saying) showLabel(saying); else if (id) showLabel(id); else hideLabel();
+  } else if (mode === "desk" && (saying || hovered)) showLabel(saying || hovered);
   for (const item of Object.values(items)) {
     const want = item.id === hovered && mode === "desk" && !NO_LIFT.has(item.id) && !item.decor && !busy ? 0.008 : 0;
     item.lift += (want - item.lift) * 0.2;

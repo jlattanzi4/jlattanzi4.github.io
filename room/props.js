@@ -393,7 +393,7 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
     }
     if (dirty) keys.instanceMatrix.needsUpdate = true;
   });
-  items.keyboard = { root: kb, label: "Keyboard", sub: "Type on yours and watch", pressKey };
+  items.keyboard = { root: kb, label: "Keyboard", sub: "Type on yours and watch. Try “coffee”", pressKey };
 
   // An ergonomic mouse, the kind with a thumb rest.
   const mouse = ergonomicMouse();
@@ -445,6 +445,13 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
       await tween(500, (k) => level(lerp(from, to, k)), "out");
       full = to;
       if (full <= 0.02) items.cup.sub = "Empty. Click for another";
+    },
+    async refill() {
+      if (full >= 0.99) { steamBoost = 0.8; return; }
+      const from = full;
+      items.cup.sub = "Take a sip";
+      await tween(700, (k) => level(lerp(from, 1, k)), "out");
+      full = 1;
     },
   };
 
@@ -551,9 +558,12 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
   items.football = {
     root: ballGroup, label: "NFL Survivor Optimizer", sub: "This week’s pick, live",
     async act() {
+      await items.football.spin();
+      return "nfl";
+    },
+    async spin() {
       await tween(900, (k) => { ball.rotation.y = k * Math.PI * 4; ballHolder.position.y = 0.06 + Math.sin(k * Math.PI) * 0.09; }, "out");
       ball.rotation.y = 0;
-      return "nfl";
     },
   };
 
@@ -574,7 +584,11 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
   items.car = {
     root: car.root, label: "Box Box", sub: "Fantasy F1 for your group chat",
     async act() {
-      if (motion.reduce) return "box";
+      await items.car.lap();
+      return "box";
+    },
+    async lap() {
+      if (motion.reduce) return;
       const p = new THREE.Vector3(), d = new THREE.Vector3();
       await tween(2300, (k) => {
         lap.getPointAt(k, p); lap.getTangentAt(k, d);
@@ -583,7 +597,6 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
         car.spin(k * 70);
       }, "inOut");
       at(car.root, carHome.x, TOP, carHome.z, carHome.ry);
-      return "box";
     },
   };
 
