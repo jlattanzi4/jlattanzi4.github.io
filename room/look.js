@@ -2,7 +2,8 @@
 // the light bar on the monitor, the screen itself, and an LED strip behind the monitor that
 // washes the wall. Between them the room falls off into the dark, the way it does at night.
 //
-// The image is rendered in linear HDR with 4x MSAA. Bloom picks up only what emits light (the
+// The image is rendered in linear HDR, at the screen's full resolution on a Retina display
+// (4x MSAA below that). Bloom picks up only what emits light (the
 // bulb, the light bar's strip, lume, the macro pad's OLED), then AgX tone mapping, a gentle
 // vignette and film grain, which also breaks up banding in the dark gradients. (Screen-space
 // ambient occlusion was tried and cut: the shadow maps already ground things, and it halved
@@ -80,9 +81,12 @@ function shareShaders(scene) {
 export function quality() {
   const coarse = matchMedia("(pointer: coarse)").matches;
   const small = Math.min(innerWidth, innerHeight) < 600;
-  // Past 1.5x the post-processing costs far more than it shows: grain and MSAA hide the rest.
+  // A Retina screen gets every pixel, so the words on the monitor and the sticky notes are
+  // crisp; main.js steps down to 1.5x, then 1x, if the first seconds show the GPU can't keep up.
+  // At 2x the pixels are small enough that 4x MSAA buys nothing you can see and costs half the
+  // frame rate, so it's only used below 2x (see samplesAt).
   return {
-    pixelRatio: Math.min(devicePixelRatio, 1.5),
+    pixelRatio: Math.min(devicePixelRatio, 2),
     shadow: coarse || small ? 1024 : 2048,
     samples: 4,
   };
@@ -239,7 +243,8 @@ export function createLook(renderer, scene, camera, items, tier) {
 
   // ---- the camera's side: post-processing
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
-  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: tier.samples });
+  const samplesAt = (pixelRatio) => (pixelRatio >= 2 ? 0 : tier.samples);
+  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: samplesAt(renderer.getPixelRatio()) });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.4, 0.55, 2.2);
@@ -280,6 +285,10 @@ export function createLook(renderer, scene, camera, items, tier) {
       return ready;
     },
     setSize(w, h, pixelRatio) {
+      const samples = samplesAt(pixelRatio);
+      if (composer.renderTarget1.samples !== samples) {
+        for (const rt of [composer.renderTarget1, composer.renderTarget2]) { rt.samples = samples; rt.dispose(); }
+      }
       composer.setPixelRatio(pixelRatio);
       composer.setSize(w, h);
       grade.uniforms.resolution.value.set(w, h);

@@ -426,7 +426,8 @@ addEventListener("keydown", (e) => { if (e.key === "Escape" && listOpen()) locat
 const NO_LIFT = new Set(["monitor", "mail", "linkedin", "lamp", "lightbar", "keyboard", "github"]);
 let running = true;
 let frames = 0;
-const timing = { start: 0, count: 0 };
+// Frame times over the first seconds, to choose how many pixels to render (see quality()).
+const timing = { last: 0, gaps: [] };
 function frame(now) {
   if (!running) return;
   requestAnimationFrame(frame);
@@ -458,13 +459,19 @@ function frame(now) {
   if (frames === 0) performance.mark("desk:first-frame");
   if (frames++ === 1) { loading.classList.add("gone"); room.classList.add("ready"); }
   if (frames % 4 === 0 && mode === "desk") placeSpots();
-  // If the first few seconds run slow, render fewer pixels.
-  if (frames === 30) timing.start = now;
-  if (frames > 30 && frames <= 150) {
-    timing.count++;
-    if (frames === 150 && (now - timing.start) / timing.count > 26 && renderer.getPixelRatio() > 1) {
-      renderer.setPixelRatio(1);
-      resize();
+  // If the first seconds run slow, render fewer pixels: 2x, then 1.5x, then 1x. Judged on the
+  // median of 90 frames, so a one-off hitch (the reflections being photographed) doesn't count.
+  if (frames > 30 && timing.gaps !== null) {
+    if (timing.last) timing.gaps.push(now - timing.last);
+    timing.last = now;
+    if (timing.gaps.length === 90) {
+      const median = timing.gaps.sort((a, b) => a - b)[45];
+      const ratio = renderer.getPixelRatio();
+      if (median > 20 && ratio > 1) {
+        renderer.setPixelRatio(ratio > 1.5 ? 1.5 : 1);
+        resize();
+        timing.gaps = []; timing.last = 0; // and look again at the new size
+      } else timing.gaps = null; // fast enough: stop measuring
     }
   }
 }
