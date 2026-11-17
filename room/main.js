@@ -472,16 +472,19 @@ function frame(now) {
   if (frames === 0) performance.mark("desk:first-frame");
   if (frames++ === 1) { loading.classList.add("gone"); room.classList.add("ready"); }
   if (frames % 4 === 0 && mode === "desk") placeSpots();
-  // If the first seconds run slow, render fewer pixels: 2x, then 1.5x, then 1x. Judged on the
-  // median of 90 frames, so a one-off hitch (the reflections being photographed) doesn't count.
+  // If the first seconds run slow, do less: drop MSAA if it's on, then render fewer pixels, 2x,
+  // then 1.5x, then 1x. Judged on the median of 90 frames, so a one-off hitch (the reflections
+  // being photographed) doesn't count.
   if (frames > 30 && timing.gaps !== null) {
     if (timing.last) timing.gaps.push(now - timing.last);
     timing.last = now;
     if (timing.gaps.length === 90) {
       const median = timing.gaps.sort((a, b) => a - b)[45];
       const ratio = renderer.getPixelRatio();
-      if (median > 20 && ratio > 1) {
-        renderer.setPixelRatio(ratio > 1.5 ? 1.5 : 1);
+      if (median > 20 && (look.msaa || ratio > 1)) {
+        const hadMsaa = look.msaa;
+        look.lighten();
+        if (!hadMsaa) renderer.setPixelRatio(ratio > 1.5 ? 1.5 : 1);
         resize();
         timing.gaps = []; timing.last = 0; // and look again at the new size
       } else timing.gaps = null; // fast enough: stop measuring
