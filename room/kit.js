@@ -24,7 +24,8 @@ export function tween(duration, onUpdate, curve = "inOut") {
 export const tweening = () => tweens.size > 0;
 export function stepTweens(now) {
   for (const t of tweens) {
-    const p = Math.min(1, (now - t.start) / t.duration);
+    // A frame's timestamp can come from just before the tween started; never go below 0.
+    const p = Math.min(1, Math.max(0, (now - t.start) / t.duration));
     t.onUpdate(t.curve(p));
     if (p >= 1) { tweens.delete(t); t.done(); }
   }
