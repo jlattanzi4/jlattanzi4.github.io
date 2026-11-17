@@ -3,7 +3,7 @@
 // the desk top is at y = TOP and the viewer sits at its front edge, looking toward −z.
 
 import * as THREE from "three";
-import { TOP, motion, tween, lerp, canvasTexture, rng, wrapText, M, P, box, mesh, at } from "./kit.js";
+import { TOP, motion, tween, lerp, clamp, canvasTexture, rng, wrapText, M, P, box, mesh, at } from "./kit.js";
 
 // ----------------------------------------------------------- textures
 
@@ -209,7 +209,7 @@ const steamTexture = () => canvasTexture(128, 256, (g, w, h) => {
 });
 
 // ------------------------------------------------------------- the desk
-export function buildDesk(scene, { screenTexture, spines = [] }) {
+export function buildDesk(scene, { screenTexture, spines = [], lastWatered = null }) {
   const items = {};
   const updates = [];
 
@@ -274,13 +274,13 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   const capL = mesh(new THREE.CylinderGeometry(0.0097, 0.0097, 0.004, 24), M("#2b2c2f", 0.3, 0.7));
   capL.rotation.z = Math.PI / 2; capL.position.x = -0.252;
   const capR = capL.clone(); capR.position.x = 0.252;
-  const clamp = mesh(box(0.05, 0.03, 0.036, 0.004), anod);
-  clamp.position.set(0, -0.012, -0.024);
+  const barClamp = mesh(box(0.05, 0.03, 0.036, 0.004), anod);
+  barClamp.position.set(0, -0.012, -0.024);
   // The emitter: a strip on the underside, angled toward the keyboard.
   const strip = new THREE.Mesh(new THREE.PlaneGeometry(0.46, 0.0055), new THREE.MeshStandardMaterial({ color: "#000000", emissive: "#ffe7c9", emissiveIntensity: 0 }));
   strip.rotation.x = Math.PI / 2 + 0.75;
   strip.position.set(0, -0.0072, 0.0058);
-  bar.add(tube, capL, capR, clamp, strip);
+  bar.add(tube, capL, capR, barClamp, strip);
   bar.position.set(0, 1.275 + 0.0095, -0.598);
   scene.add(bar);
   items.lightbar = { root: bar, label: "Monitor light", sub: "Switch it off", strip };
@@ -587,29 +587,42 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
     },
   };
 
-  // ---- snake plant in a stoneware pot
+  // ---- snake plant in a stoneware pot, watered with every commit: the longer since my last
+  // contribution on GitHub, the more its leaves lean out and fold over, and the yellower they get.
   const plant = new THREE.Group();
   const pot = mesh(new THREE.CylinderGeometry(0.055, 0.045, 0.1, 32), M("#c9c4b8", 0.85));
   pot.position.y = 0.05;
   const soil = mesh(new THREE.CircleGeometry(0.05, 24), M("#2a1e15", 1), { cast: false });
   soil.rotation.x = -Math.PI / 2; soil.position.y = 0.094;
   plant.add(pot, soil);
-  const leafMat = M("#2d5534", 0.6);
+  const days = lastWatered ? Math.max(0, Math.round((Date.parse(new Date().toISOString().slice(0, 10)) - Date.parse(lastWatered)) / 864e5)) : null;
+  const wilt = days == null ? 0 : clamp((days - 2) / 12); // fine for two days, wilted by two weeks
+  const green = new THREE.Color("#2d5534"), olive = new THREE.Color("#6f7034");
   const r = rng(21);
   for (let i = 0; i < 9; i++) {
     const h = 0.16 + r() * 0.14;
-    const leaf = mesh(new THREE.ConeGeometry(0.016, h, 4, 1), leafMat);
-    leaf.scale.z = 0.22;
+    const x = (r() - 0.5) * 0.05, z = (r() - 0.5) * 0.05, spin = r() * Math.PI;
+    const droop = 0.6 + r() * 0.8;
+    const out = Math.sign(Math.sin(spin) * x + Math.cos(spin) * z) || 1; // which way is away from the middle
+    // A flat blade that arches over across its face, away from the middle, more the drier it is.
+    const geo = new THREE.ConeGeometry(0.016, h, 4, 10);
+    geo.translate(0, h / 2, 0);
+    geo.scale(1, 1, 0.22);
+    bend(geo, h * 0.3, h, out * wilt * 1.5 * droop);
+    const leaf = mesh(geo, M(green.clone().lerp(olive, wilt * (0.3 + r() * 0.5)), 0.6));
+    // Spin first, then lean away from the middle of the pot.
     const holder = new THREE.Group();
-    holder.position.set((r() - 0.5) * 0.05, 0.094, (r() - 0.5) * 0.05);
-    holder.rotation.set((r() - 0.5) * 0.45, r() * Math.PI, (r() - 0.5) * 0.45);
-    leaf.position.y = h / 2;
+    holder.rotation.order = "YXZ";
+    holder.position.set(x, 0.094, z);
+    holder.rotation.set(out * (0.04 + r() * 0.18 + wilt * 0.35 * droop), spin, (r() - 0.5) * 0.18);
     holder.add(leaf);
     plant.add(holder);
   }
   at(plant, 0.69, TOP, -0.68);
   scene.add(plant);
-  items.plant = { root: plant, label: "Snake plant", sub: "Hard to kill", decor: true };
+  const ago = days == null ? null : days === 0 ? "Last one today" : days === 1 ? "Last one yesterday"
+    : days < 7 ? `Last one ${days} days ago` : days < 14 ? `It’s been ${days} days` : `It’s been ${Math.floor(days / 7)} weeks. Hard to kill, they said`;
+  items.plant = { root: plant, label: "Snake plant", sub: ago ? `Watered with every commit. ${ago}` : "Hard to kill", decor: true };
 
   // ---- desk lamp: a warm pool of light on the left of the desk
   const lamp = new THREE.Group();
@@ -826,6 +839,23 @@ function ergonomicMouse() {
   thumb.position.set(tx + 0.0012, ty + 0.002, tz);
   root.add(thumb);
   return root;
+}
+
+// ---------------------------------------------------------------- bending
+// Bend a shape standing on y = 0 toward +z (or −z, for a negative angle): straight up to
+// `from`, then along a circular arc through `angle` radians by `to`, like a leaf flopping over.
+function bend(geo, from, to, angle) {
+  if (Math.abs(angle) < 1e-3) return;
+  const radius = (to - from) / angle;
+  const p = geo.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const y = p.getY(i), z = p.getZ(i);
+    if (y <= from) continue;
+    const a = ((y - from) / (to - from)) * angle;
+    p.setY(i, from + (radius - z) * Math.sin(a));
+    p.setZ(i, radius - (radius - z) * Math.cos(a));
+  }
+  geo.computeVertexNormals();
 }
 
 // ------------------------------------------------------------- AirPods Pro case
