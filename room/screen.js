@@ -2,6 +2,7 @@
 // and the real desktop that takes over when you lean in (HTML, scaled to the screen).
 
 import * as THREE from "three";
+import { moonPhase, drawMoon, skyLine, skySentence } from "./window.js";
 
 export const OS_W = 1280, OS_H = 720;
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -75,6 +76,10 @@ function clockText(d = new Date()) {
   return d.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" });
 }
 
+// Boston's weather in the menu bar, beside the clock, the way a Mac shows it: the moon in its
+// phase, then the temperature and the sky (room/window.js). Until it loads, just the moon.
+let skyNow = null;
+
 // The wallpaper: contour lines over a dark blue, like a topographic map of a ski area.
 // Drawn once, then shared by the screen seen from the chair and the desktop you lean in to.
 let wallpaper = null;
@@ -131,7 +136,12 @@ export function paintIdle(canvas) {
   g.fillText("Joseph Lattanzi", 20, 15);
   g.fillStyle = "rgba(255,255,255,0.75)"; g.font = "400 15px 'Instrument Sans', sans-serif";
   g.fillText("Projects", 158, 15); g.fillText("Contact", 230, 15);
-  g.textAlign = "right"; g.fillStyle = "#fff"; g.fillText(clockText(), w - 20, 15); g.textAlign = "left";
+  g.textAlign = "right"; g.fillStyle = "#fff"; g.fillText(clockText(), w - 20, 15);
+  const moon = moonPhase(), wx = skyLine(skyNow, moon);
+  const wxRight = w - 20 - g.measureText(clockText()).width - 22;
+  g.fillStyle = "rgba(255,255,255,0.75)"; g.fillText(wx, wxRight, 15);
+  drawMoon(g, wxRight - g.measureText(wx).width - 13, 15, 6.5, moon);
+  g.textAlign = "left";
   // the name
   g.textBaseline = "alphabetic"; g.fillStyle = "#fff";
   g.font = "600 76px 'Instrument Sans', sans-serif"; g.fillText("Joseph Lattanzi", 84, 250);
@@ -364,7 +374,16 @@ export function createScreen({ onLeave, reduce, shelf, record }) {
   paper.setAttribute("aria-hidden", "true");
   os.prepend(paper);
   const clock = $("#clock", screen);
-  const tick = () => { clock.textContent = clockText(); };
+  const wx = $("#wx", screen);
+  const tick = () => {
+    clock.textContent = clockText();
+    const moon = moonPhase();
+    const c = $("canvas", wx), g = c.getContext("2d");
+    g.clearRect(0, 0, c.width, c.height);
+    drawMoon(g, c.width / 2, c.height / 2, c.width / 2 - 2, moon);
+    $("span", wx).textContent = skyLine(skyNow, moon);
+    wx.title = skySentence(skyNow, moon);
+  };
   tick(); setInterval(tick, 20000);
 
   // Dock icons as small canvases, so they match the screen exactly.
@@ -427,6 +446,7 @@ export function createScreen({ onLeave, reduce, shelf, record }) {
   }
 
   return {
+    setSky(sky) { skyNow = sky; tick(); },
     get open() { return !screen.hidden; },
     get app() { return current; },
     show(rect, app) {
@@ -459,6 +479,7 @@ export function screenTexture() {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;
   // Keep the menu-bar clock current.
-  setInterval(() => { paintIdle(canvas); tex.needsUpdate = true; }, 30000);
-  return { tex };
+  const repaint = () => { paintIdle(canvas); tex.needsUpdate = true; };
+  setInterval(repaint, 30000);
+  return { tex, setSky(sky) { skyNow = sky; repaint(); } };
 }

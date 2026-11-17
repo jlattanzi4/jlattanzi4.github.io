@@ -9,6 +9,7 @@ import { buildMacropad } from "./macropad.js";
 import { loadGithub, buildGithubPrint } from "./github.js";
 import { createLook, quality } from "./look.js";
 import { createScreen, screenTexture, theCall, recordLine } from "./screen.js";
+import { bostonSky } from "./window.js";
 
 performance.mark("desk:modules");
 const room = document.getElementById("room");
@@ -450,4 +451,8 @@ requestAnimationFrame(frame);
 requestAnimationFrame(() => requestAnimationFrame(() => look.captureLight()));
 setTimeout(() => look.captureLight(), 1500); // again once everything has drawn once
 setTimeout(() => theCall().catch(() => {}), 1500); // warm up this week's pick in the background
+// Boston's sky, through the window and in the menu bar, again every 15 minutes.
+const lookOutside = () => bostonSky().then((sky) => { if (!sky) return; look.sky.setSky(sky); screenTex.setSky(sky); desktop.setSky(sky); });
+setTimeout(lookOutside, 1200);
+setInterval(lookOutside, 15 * 60 * 1000);
 if (new URLSearchParams(location.search).has("debug")) Object.assign(window, { desk: { THREE, scene, camera, renderer, look, items, inspect, leaveInspect } });
