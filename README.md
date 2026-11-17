@@ -43,7 +43,7 @@ To load quickly it fetches the whole module graph at once (`modulepreload`) and 
 - `room/main.js`: the camera, hovering, clicking, close-ups and keyboard access. `room/kit.js` has the shared helpers.
 - `room.css`, `index.html`.
 
-The NFL pick loads `/nfl-survivor-optimizer/js/worker.js` and its data from the same domain. If that isn't available, the window links to the optimizer instead.
+The NFL pick loads `/nfl-survivor-optimizer/js/worker.js` and its data from the same domain. It's for this week until more than half its games have kicked off (on Sunday afternoon, usually), then for next week, so it's never forced onto the last game or two; between seasons the window says so (`room/call-week.js`). If the optimizer isn't available, the window links to it instead.
 
 ### What comes from elsewhere
 
@@ -68,7 +68,7 @@ GITHUB_TOKEN=$(gh auth token) python3 scripts/github.py
 node scripts/survivor.mjs ../nfl-survivor-optimizer   # a clone with its history
 python3 scripts/spotify.py                            # needs the three SPOTIFY_ variables
 uv run --no-project --with pytest pytest scripts -q
-node --test scripts/survivor.test.mjs
+node --test scripts/*.test.mjs
 ```
 
 To set up Spotify, make an app at https://developer.spotify.com/dashboard with the redirect URI `http://127.0.0.1:8888/callback`, then run `python3 scripts/spotify_auth.py`: it signs you in once and saves the secrets to the repo with the GitHub CLI.

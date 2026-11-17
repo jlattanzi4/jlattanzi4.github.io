@@ -163,6 +163,7 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .c-stats div { margin: 0; }
 .c-stats dt { font: 400 12px/1.25 var(--sans); color: #93a197; }
 .c-stats dd { margin: 4px 0 0; font: 700 30px/1 var(--cond); }
+.c-stats[hidden], .c-dot[hidden] { display: none; } /* between seasons */
 .c-stats div:last-child dd { color: #f5c84c; }
 .c-path { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px 6px; margin: 18px 0 0; padding: 0; list-style: none; font: 400 11px/1.2 var(--mono); color: #7f8d84; }
 .c-path li { display: flex; flex-direction: column; gap: 2px; }
