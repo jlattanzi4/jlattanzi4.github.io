@@ -1,0 +1,55 @@
+name: Refresh the desk
+
+# Two things on the desk come from elsewhere: the book I'm reading (from my Goodreads
+# profile) and the contribution graph on the wall (from GitHub). Once a day is plenty.
+# The graph covers full weeks to last Saturday, so it only changes once a week.
+
+on:
+  schedule:
+    - cron: "41 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: desk-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Pinned to a release: setup-uv publishes no moving major tag.
+      - uses: astral-sh/setup-uv@v10.3.3
+      - name: Test the parsers
+        run: uv run --no-project --with pytest pytest scripts -q
+      # Each script exits 1 without writing if what it read doesn't check out, so a failed
+      # step leaves the last good file published. One failing doesn't stop the other.
+      - name: Read the Goodreads profile
+        id: reading
+        continue-on-error: true
+        run: python3 scripts/reading.py
+      - name: Read the GitHub contribution graph
+        id: github
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/github.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "Nothing new on the desk"
+          else
+            git commit -m "data: refresh the desk ($(date -u +'%Y-%m-%d'))"
+            git push
+          fi
+      - name: Report a failed refresh
+        if: steps.reading.outcome == 'failure' || steps.github.outcome == 'failure'
+        run: |
+          echo "Goodreads: ${{ steps.reading.outcome }}, GitHub: ${{ steps.github.outcome }}"
+          exit 1

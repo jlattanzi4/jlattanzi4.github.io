@@ -4,3 +4,6 @@ _site/
 .jekyll-metadata
 .DS_Store
 Gemfile.lock
+.pytest_cache/
+__pycache__/
+.ruff_cache/
