@@ -43,7 +43,7 @@ const blankTexture = () => noteTexture(["", ""]);
 // Square to sphere: the octahedral wrap, then squashed a little and creased.
 function crumpledPositions(base, seed) {
   const r = rng(seed);
-  const ridges = Array.from({ length: 7 }, () => ({ d: new THREE.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).normalize(), f: 5 + r() * 6, ph: r() * 6, a: 0.05 + r() * 0.07 }));
+  const ridges = Array.from({ length: 7 }, () => ({ d: new THREE.Vector3(r() - 0.5, r() - 0.5, r() - 0.5).normalize(), f: 5 + r() * 6, ph: r() * 6, a: 0.03 + r() * 0.045 }));
   const uv = base.attributes.uv, out = new Float32Array(uv.count * 3), d = new THREE.Vector3();
   for (let i = 0; i < uv.count; i++) {
     let x = uv.getX(i) * 2 - 1, y = uv.getY(i) * 2 - 1;
@@ -84,14 +84,33 @@ export function buildDrafts(scene, { x, y, z, ry = 0 }) {
   }
 
   const paper = (map) => M("#ffffff", 0.85, 0, { map, side: THREE.DoubleSide });
+  // Average the normals where corners of the sheet meet, k of the way: 0 is every facet lit
+  // flat (sharp creases), 1 is smooth.
+  const corners = new Map();
+  for (let i = 0; i < base.attributes.uv.count; i++) {
+    const key = `${base.attributes.uv.getX(i).toFixed(4)},${base.attributes.uv.getY(i).toFixed(4)}`;
+    if (!corners.has(key)) corners.set(key, []);
+    corners.get(key).push(i);
+  }
+  const avg = new THREE.Vector3(), one = new THREE.Vector3();
+  function smooth(nor, k) {
+    for (const group of corners.values()) {
+      avg.set(0, 0, 0);
+      for (const i of group) avg.add(one.fromBufferAttribute(nor, i));
+      avg.normalize();
+      for (const i of group) one.fromBufferAttribute(nor, i).lerp(avg, k).normalize().toArray(nor.array, i * 3);
+    }
+    nor.needsUpdate = true;
+  }
   const blank = blankTexture();
   const spots = [[-0.02, 0.012, 0.3], [0.045, -0.01, 1.7], [0.0, -0.045, 3.1]];
   const balls = spots.map(([bx, bz, spin], i) => {
     const geo = base.clone();
     geo.setAttribute("position", new THREE.BufferAttribute(crumpledPositions(base, 11 + i * 7), 3));
     geo.computeVertexNormals();
+    smooth(geo.attributes.normal, 0.55); // creased, but still paper
     const ball = new THREE.Mesh(geo, paper(blank));
-    ball.castShadow = ball.receiveShadow = true;
+    ball.castShadow = true; // not on itself: a crumpled ball in its own shadow looks like a rock
     ball.position.set(bx, 0, bz);
     ball.rotation.y = spin;
     root.add(ball);
@@ -101,31 +120,14 @@ export function buildDrafts(scene, { x, y, z, ry = 0 }) {
   const notes = NOTES.map(noteTexture);
   const sheetGeo = base.clone();
   const sheet = new THREE.Mesh(sheetGeo, paper(notes[0]));
-  sheet.castShadow = sheet.receiveShadow = true;
+  sheet.castShadow = true;
   sheet.visible = false;
   root.add(sheet);
 
-  // Blend the sheet between a ball (in the ball's place) and smoothed out. Crumpled, each
-  // triangle is lit flat, so the creases are sharp; opened, the light smooths over them, by
-  // averaging the normals of the corners that meet at each point of the sheet.
+  // Blend the sheet between a ball (in the ball's place) and smoothed out; the light smooths
+  // over its creases as it opens.
   let from = null, at = 0;
-  const pos = sheetGeo.attributes.position, nor = sheetGeo.attributes.normal;
-  const corners = new Map();
-  for (let i = 0; i < pos.count; i++) {
-    const key = `${base.attributes.uv.getX(i).toFixed(4)},${base.attributes.uv.getY(i).toFixed(4)}`;
-    if (!corners.has(key)) corners.set(key, []);
-    corners.get(key).push(i);
-  }
-  const avg = new THREE.Vector3(), one = new THREE.Vector3();
-  function smooth(k) {
-    for (const group of corners.values()) {
-      avg.set(0, 0, 0);
-      for (const i of group) avg.add(one.fromBufferAttribute(nor, i));
-      avg.normalize();
-      for (const i of group) one.fromBufferAttribute(nor, i).lerp(avg, k).normalize().toArray(nor.array, i * 3);
-    }
-    nor.needsUpdate = true;
-  }
+  const pos = sheetGeo.attributes.position;
   const local = new THREE.Vector3();
   function shape(k) {
     const ball = balls[open];
@@ -136,7 +138,7 @@ export function buildDrafts(scene, { x, y, z, ry = 0 }) {
     }
     pos.needsUpdate = true;
     sheetGeo.computeVertexNormals();
-    smooth(k);
+    smooth(sheetGeo.attributes.normal, 0.55 + 0.45 * k);
     at = k;
   }
 
