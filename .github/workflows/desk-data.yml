@@ -35,7 +35,7 @@ jobs:
       - name: Test the parsers
         run: |
           uv run --no-project --with pytest pytest scripts -q
-          node --test scripts/survivor.test.mjs
+          node --test scripts/*.test.mjs
       # Each script exits 1 without writing if what it read doesn't check out, so a failed
       # step leaves the last good file published. One failing doesn't stop the other.
       - name: Read the Goodreads profile

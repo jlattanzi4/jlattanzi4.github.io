@@ -3,6 +3,7 @@
 
 import * as THREE from "three";
 import { moonPhase, drawMoon, skyLine, skySentence } from "./window.js";
+import { callWeek, weekOf, LAST_WEEK } from "./call-week.js";
 
 export const OS_W = 1280, OS_H = 720;
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -168,12 +169,12 @@ export function theCall() {
     const base = "/nfl-survivor-optimizer/";
     const data = await fetch(`${base}data/season.json`, { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
     const now = Date.now();
-    let week = 1;
-    data.week_starts.forEach((iso, i) => { if (now >= Date.parse(iso)) week = i + 1; });
-    // Once the week's last game has kicked off there's nothing left to pick, so the call is
-    // for next week, as soon as its lines are out.
-    const open = (w) => data.games.some((g) => g.week === w && g.p != null && g.result == null && !(g.kickoff && Date.parse(g.kickoff) <= now));
-    if (!open(week) && week < 18 && open(week + 1)) week++;
+    // This week's call until most of its games have kicked off, then next week's (call-week.js).
+    const week = callWeek(data, now);
+    if (week == null) {
+      if (weekOf(data, now) >= LAST_WEEK) return { data, over: true };
+      throw new Error("no week to call");
+    }
     const worker = new Worker(`${base}js/worker.js`, { type: "module" });
     const result = await new Promise((ok, no) => {
       worker.onmessage = (e) => (e.data.error ? no(new Error(e.data.error)) : ok(e.data.result));
@@ -195,7 +196,14 @@ function ago(iso) {
 
 async function fillCall(win) {
   try {
-    const { data, week, result, best, team } = await theCall();
+    const { data, week, result, best, team, over } = await theCall();
+    if (over) {
+      $(".c-week", win).textContent = `${data.season} season`;
+      $(".c-name", win).textContent = "That’s the season";
+      $(".c-game", win).textContent = "The next call comes with next season’s lines";
+      $(".c-stats", win).hidden = $(".c-dot", win).hidden = true;
+      return;
+    }
     const g = best.thisWeek;
     const spread = g.spread == null ? "" : ` ${g.spread > 0 ? "+" : ""}${g.spread}`;
     $(".c-week", win).textContent = `Week ${week}`;
