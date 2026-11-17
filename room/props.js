@@ -907,13 +907,41 @@ function airpodsCase(lit = false) {
   const white = new THREE.MeshPhysicalMaterial({ color: "#f3f3f1", roughness: 0.22, clearcoat: 0.7, clearcoatRoughness: 0.15 });
   const body = mesh(part(false), white);
   const lid = mesh(part(true), white);
-  // The lid sits a hair above the body, so the seam reads as a fine line.
-  lid.position.y = 0.0003;
+  // The lid sits a hair above the body, so the seam reads as a fine line. It turns on a hinge
+  // along the back of the seam.
+  const hinge = new THREE.Group();
+  hinge.position.set(0, SEAM, -D / 2 + 0.002);
+  lid.position.set(0, 0.0003 - SEAM, D / 2 - 0.002);
+  hinge.add(lid);
   const led = mesh(new THREE.CircleGeometry(0.0012, 16), M("#2b2d2c", 0.4, 0, lit ? { emissive: "#00ff2a", emissiveIntensity: 2.4 } : {}), { cast: false });
   led.position.set(0, SEAM - 0.009, D / 2 + 0.00005);
-  lying.add(body, lid, led);
-  lying.rotation.x = -Math.PI / 2;
+  // The two buds in their wells, hidden until the lid opens: a white head with a dark grille,
+  // leaning a little outward.
+  const grille = M("#1d1e1f", 0.85);
+  for (const side of [-1, 1]) {
+    const bud = new THREE.Group();
+    const head = mesh(new THREE.SphereGeometry(0.0058, 20, 14), white, { cast: false });
+    head.scale.set(1, 0.85, 1);
+    const face = mesh(new THREE.CircleGeometry(0.0026, 16), grille, { cast: false });
+    face.rotation.x = -Math.PI / 2;
+    face.position.set(side * 0.0012, 0.0049, 0.0008);
+    bud.add(head, face);
+    bud.position.set(side * 0.0125, SEAM + 0.0004, 0.0008);
+    bud.rotation.z = -side * 0.22;
+    lying.add(bud);
+  }
+  lying.add(body, hinge, led);
+  const REST = -Math.PI / 2;
+  lying.rotation.x = REST;
   lying.position.set(0, D / 2, H / 2); // resting on its back, centred where it sits
   root.add(lying);
+  // Hovered (k from 0 to 1): picked up and tipped toward you with the lid swung open, the way
+  // you'd hold it to take a bud out. Lying flat, the lid would open into the desk.
+  root.userData.open = (k) => {
+    const e = k * k * (3 - 2 * k);
+    lying.position.y = D / 2 + 0.014 * e;
+    lying.rotation.x = REST + 1.2 * e;
+    hinge.rotation.x = -2 * e;
+  };
   return root;
 }
