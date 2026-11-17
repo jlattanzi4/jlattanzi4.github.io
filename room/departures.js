@@ -145,7 +145,8 @@ export function buildDepartures(scene, { x, y, z, ry }) {
     get note() {
       return bikes ? `Bluebikes outside: ${bikes.bikes} ${bikes.bikes === 1 ? "bike" : "bikes"}, ${bikes.docks} open ${bikes.docks === 1 ? "dock" : "docks"}. Which is faster? Working on it.` : "";
     },
-    view: { offset: new THREE.Vector3(0, 0.05, 0.2), target: new THREE.Vector3(0, 0.038, 0) },
+    // Seen from a little to the right and above: straight in front, 20 cm out, is the espresso.
+    view: { offset: new THREE.Vector3(0.07, 0.09, 0.14), target: new THREE.Vector3(0, 0.035, 0) },
     caption: () => "Live from the MBTA and Bluebikes: the next Red Line trains from Broadway, and the bike dock outside.",
     actions: () => [],
     press: () => {},
