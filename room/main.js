@@ -8,6 +8,7 @@ import { loadShelf, buildBook } from "./book.js";
 import { buildMacropad } from "./macropad.js";
 import { loadGithub, buildGithubPrint } from "./github.js";
 import { buildDepartures } from "./departures.js";
+import { buildDrafts } from "./drafts.js";
 import { createLook, quality } from "./look.js";
 import { createScreen, screenTexture, theCall, recordLine } from "./screen.js";
 import { bostonSky } from "./window.js";
@@ -56,6 +57,7 @@ items.football.note = recordLine(record);
 // The AirPods are just AirPods, unless Spotify has told the desk what's been on repeat.
 if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url };
 items.departures = buildDepartures(scene, { x: 0.68, y: TOP, z: -0.42, ry: -0.55 });
+items.drafts = buildDrafts(scene, { x: -0.13, y: onMat, z: -0.14, ry: 0.05 });
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
@@ -343,7 +345,7 @@ async function activate(id) {
 
 // Keyboard users reach every object through buttons laid over the scene:
 // the computer first, then the projects, the things that are mine, the ways to reach me, and the rest.
-const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "departures", "pods", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
+const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "drafts", "departures", "pods", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
 const spots = TAB_ORDER.filter((id) => items[id]).map((id) => items[id]).map((item) => {
   const b = document.createElement("button");
   b.type = "button";
