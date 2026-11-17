@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import { TOP, motion, tween, stepTweens, fetchJSON, moved } from "./kit.js";
-import { buildDesk } from "./props.js";
+import { buildDesk, paintAhead } from "./props.js";
 import { buildWatch } from "./watch.js";
 import { loadShelf, buildBook } from "./book.js";
 import { buildMacropad } from "./macropad.js";
@@ -10,7 +10,7 @@ import { loadGithub, buildGithubPrint } from "./github.js";
 import { buildDepartures } from "./departures.js";
 import { buildDrafts } from "./drafts.js";
 import { createLook, quality } from "./look.js";
-import { createScreen, screenTexture, theCall, recordLine } from "./screen.js";
+import { createScreen, screenTexture, theCall, recordLine, wallpaperCanvas } from "./screen.js";
 import { bostonSky } from "./window.js";
 
 performance.mark("desk:modules");
@@ -43,7 +43,12 @@ const tier = quality();
 renderer.setPixelRatio(tier.pixelRatio);
 
 const scene = new THREE.Scene();
-const [shelf, graph, record, music] = await Promise.all([loadShelf(), loadGithub(), fetchJSON("data/survivor.json"), fetchJSON("data/music.json"), fontsReady]);
+const loads = Promise.all([loadShelf(), loadGithub(), fetchJSON("data/survivor.json"), fetchJSON("data/music.json"), fontsReady]);
+// The monitor's wallpaper and the big surface textures need neither the data nor the fonts, so
+// paint them while those load.
+wallpaperCanvas();
+paintAhead();
+const [shelf, graph, record, music] = await loads;
 performance.mark("desk:data");
 
 const screenTex = screenTexture();
