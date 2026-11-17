@@ -22,7 +22,7 @@ You sit at my desk, late in the evening. Everything on it does something:
 | A snake plant | Watered with every commit: the longer since my last contribution on GitHub, the more it wilts |
 | The window (you only see its light) | Boston's sky, right now: rain runs down the wall, snow banks up on the sill, the moon is in its real phase. The monitor's menu bar says the weather |
 | A little LED sign | The next Red Line trains from Broadway and the Bluebikes dock outside, live |
-| The AirPods | What I've had on repeat lately, from Spotify. Click to listen |
+| The AirPods | What I've had on repeat lately, from Spotify; the case's light is green while it's connected. Click to listen |
 | A wastebasket in the corner | Crumpled drafts: things I tried and cut. Fish one out and it uncrumples to say why |
 
 The mouse is just there, as on any desk.
@@ -52,7 +52,7 @@ Three things are live, fetched by your browser after the desk is up: Boston's we
 - `data/shelf.json` and `data/covers/` come from my public Goodreads profile. Goodreads no longer issues API keys and its robots.txt disallows the shelf RSS feeds, but it allows the profile page, which lists the book I'm reading with page progress, my favorites and my shelf counts. `scripts/reading.py` reads that page. The covers are kept here because Goodreads' image host sends no CORS headers, and WebGL can only draw images from the same site.
 - `data/github.json` is my contribution calendar from GitHub's GraphQL API, for the 52 full weeks to last Saturday, so the graph changes once a week, and the day of my last contribution, which is when the plant was last watered. `scripts/github.py` writes it.
 - `data/survivor.json` is one survivor entry that followed the NFL optimizer's call every week this season, for a pool of 50. Each pick is made from the optimizer's data as it stood just before that week's first kickoff (that version, from the NFL repo's history), with the teams already used ruled out, then graded against the result; a tie counts as a loss. A pick, once in the file, never changes. The weeks before this file existed were filled in from those same snapshots, with today's version of the engine. `scripts/survivor.mjs` writes it.
-- `data/music.json` is my top track on Spotify over about the last four weeks. `scripts/spotify.py` writes it, once three secrets are set by signing in once with `scripts/spotify_auth.py`; until then it's `null` and the AirPods are just AirPods.
+- `data/music.json` is my top track on Spotify over about the last four weeks. `scripts/spotify.py` writes it, once three secrets are set by signing in once with `scripts/spotify_auth.py`; until then it's `null`, the case's light is off, and the AirPods are just AirPods.
 
 The [Refresh the desk](.github/workflows/desk-data.yml) workflow runs them once a day and commits any change. Each script checks what it read and exits without writing if anything looks wrong, so the last good file stays up; if any fails, the run fails, and GitHub sends an email.
 

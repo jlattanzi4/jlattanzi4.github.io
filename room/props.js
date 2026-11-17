@@ -209,7 +209,7 @@ const steamTexture = () => canvasTexture(128, 256, (g, w, h) => {
 });
 
 // ------------------------------------------------------------- the desk
-export function buildDesk(scene, { screenTexture, spines = [], lastWatered = null }) {
+export function buildDesk(scene, { screenTexture, spines = [], lastWatered = null, listening = false }) {
   const items = {};
   const updates = [];
 
@@ -455,8 +455,8 @@ export function buildDesk(scene, { screenTexture, spines = [], lastWatered = nul
     },
   };
 
-  // ---- AirPods Pro case, lying on its back
-  const pods = airpodsCase();
+  // ---- AirPods Pro case, lying on its back. Its light is green while Spotify is connected.
+  const pods = airpodsCase(listening);
   at(pods, 0.36, ON_MAT, -0.115, -0.35);
   scene.add(pods);
 
@@ -874,7 +874,9 @@ function bend(geo, from, to, angle) {
 // ------------------------------------------------------------- AirPods Pro case
 // A squircle, pillowed front and back, with the lid's seam a third of the way down. Built
 // standing up, then laid on its back with the front facing up and the hinge away from you.
-function airpodsCase() {
+// The status light on the front glows green when `lit`: saturated and below the bloom's
+// threshold, since tone mapping turns anything brighter white.
+function airpodsCase(lit = false) {
   const root = new THREE.Group();
   const lying = new THREE.Group();
   const W = 0.0606, H = 0.0452, D = 0.0217, SEAM = H - 0.0148;
@@ -907,7 +909,7 @@ function airpodsCase() {
   const lid = mesh(part(true), white);
   // The lid sits a hair above the body, so the seam reads as a fine line.
   lid.position.y = 0.0003;
-  const led = mesh(new THREE.CircleGeometry(0.0009, 16), M("#2b2d2c", 0.4), { cast: false });
+  const led = mesh(new THREE.CircleGeometry(0.0012, 16), M("#2b2d2c", 0.4, 0, lit ? { emissive: "#00ff2a", emissiveIntensity: 2.4 } : {}), { cast: false });
   led.position.set(0, SEAM - 0.009, D / 2 + 0.00005);
   lying.add(body, lid, led);
   lying.rotation.x = -Math.PI / 2;

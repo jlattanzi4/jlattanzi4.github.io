@@ -47,7 +47,7 @@ const [shelf, graph, record, music] = await Promise.all([loadShelf(), loadGithub
 performance.mark("desk:data");
 
 const screenTex = screenTexture();
-const { items, updates, onMat, pods } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines, lastWatered: graph?.last_contribution });
+const { items, updates, onMat, pods } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines, lastWatered: graph?.last_contribution, listening: Boolean(music) });
 items.watch = buildWatch(scene, { x: -0.335, y: TOP, z: -0.43, ry: -0.35 });
 items.macropad = buildMacropad(scene, { x: 0.325, y: onMat, z: -0.262, ry: -0.04 });
 const book = buildBook(scene, shelf, { x: -0.54, z: -0.385, ry: 0.28 });
