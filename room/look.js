@@ -57,6 +57,25 @@ const barCookie = () => canvasTexture(256, 256, (g, w, h) => {
   g.restore();
 });
 
+// Every combination of material features is its own shader program, and each one takes a
+// moment to compile (about 0.15 s on a fast laptop, much longer on a slow one) before the
+// desk can appear. A plain white texture changes nothing in the picture, so materials that
+// differ only in which of these maps they have all get the same set, and share one program.
+const WHITE = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+WHITE.needsUpdate = true;
+function shareShaders(scene) {
+  scene.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const m of [].concat(o.material)) {
+      if (!m.isMeshStandardMaterial || m.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile) continue;
+      m.map ??= WHITE;
+      m.emissiveMap ??= WHITE;
+      m.roughnessMap ??= WHITE;
+      m.needsUpdate = true;
+    }
+  });
+}
+
 export function quality() {
   const coarse = matchMedia("(pointer: coarse)").matches;
   const small = Math.min(innerWidth, innerHeight) < 600;
@@ -241,6 +260,18 @@ export function createLook(renderer, scene, camera, items, tier) {
     state,
     apply,
     captureLight,
+    // Compile every material for the buffer the desk is actually drawn into. A shader drawn to
+    // the screen is a different program from one drawn to a buffer (tone mapping, colour space),
+    // so compiling against the screen would build each one for nothing and then again on the
+    // first frame.
+    compile() {
+      shareShaders(scene);
+      const was = renderer.getRenderTarget();
+      renderer.setRenderTarget(composer.readBuffer);
+      const ready = renderer.compileAsync(scene, camera); // creates every program before it returns
+      renderer.setRenderTarget(was);
+      return ready;
+    },
     setSize(w, h, pixelRatio) {
       composer.setPixelRatio(pixelRatio);
       composer.setSize(w, h);

@@ -400,7 +400,7 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   at(mouse, 0.17, ON_MAT, -0.262, 0.14);
   scene.add(mouse);
 
-  // ---- espresso: saucer, cup, crema, steam (just there, like the plant and the AirPods)
+  // ---- espresso: saucer, cup, crema, steam
   const cup = new THREE.Group();
   const ceramic = P("#f4f2ed", 0.28, { clearcoat: 0.8 });
   const saucer = mesh(new THREE.CylinderGeometry(0.06, 0.046, 0.008, 48), ceramic);
@@ -412,7 +412,8 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   handle.position.set(0.036, 0.034, 0); handle.rotation.z = -Math.PI / 2 - 0.25;
   const coffee = new THREE.Mesh(new THREE.CircleGeometry(0.0285, 40), M("#ffffff", 0.2, 0, { map: cremaTexture() }));
   coffee.rotation.x = -Math.PI / 2;
-  coffee.position.y = 0.056;
+  const level = (f) => { const y = 0.012 + f * 0.036; coffee.position.y = 0.008 + y; coffee.scale.setScalar(0.74 + f * 0.26); coffee.visible = f > 0.02; };
+  level(1);
   const steamTex = steamTexture();
   const puffs = [0, 1, 2, 3].map((i) => {
     const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: steamTex, color: "#c9c4bb", transparent: true, depthWrite: false, opacity: 0 }));
@@ -424,16 +425,30 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   cup.add(saucer, vessel, handle, coffee);
   at(cup, 0.5, TOP, -0.19, 0.6);
   scene.add(cup);
+  let full = 1, steamBoost = 0;
   updates.push((t) => {
+    steamBoost = Math.max(0, steamBoost - 0.01);
     for (const s of puffs) {
       const p = (t * 0.00018 + s.userData.phase) % 1;
       s.position.set(Math.sin(p * 6 + s.userData.phase * 9) * 0.008, 0.06 + p * 0.1, Math.cos(p * 5) * 0.004);
       s.scale.set(0.025 + p * 0.03, 0.05 + p * 0.05, 1);
-      s.material.opacity = Math.sin(p * Math.PI) * 0.07;
+      s.material.opacity = full > 0.05 ? Math.sin(p * Math.PI) * 0.07 * (0.6 + full * 0.4 + steamBoost) : 0;
     }
   });
+  items.cup = {
+    root: cup, label: "Espresso", sub: "Take a sip",
+    async act() {
+      if (full <= 0.02) { items.cup.sub = "Take a sip"; await tween(700, (k) => level(k), "out"); full = 1; return; }
+      steamBoost = 0.8;
+      const from = full, to = Math.max(0, full - 0.34);
+      await tween(380, (k) => { cup.rotation.z = Math.sin(k * Math.PI) * 0.12; }, "inOut");
+      await tween(500, (k) => level(lerp(from, to, k)), "out");
+      full = to;
+      if (full <= 0.02) items.cup.sub = "Empty. Click for another";
+    },
+  };
 
-  // ---- AirPods Pro case, standing up
+  // ---- AirPods Pro case, lying on its back
   const pods = airpodsCase();
   at(pods, 0.36, ON_MAT, -0.115, -0.35);
   scene.add(pods);
@@ -594,6 +609,7 @@ export function buildDesk(scene, { screenTexture, spines = [] }) {
   }
   at(plant, 0.69, TOP, -0.68);
   scene.add(plant);
+  items.plant = { root: plant, label: "Snake plant", sub: "Hard to kill", decor: true };
 
   // ---- desk lamp: a warm pool of light on the left of the desk
   const lamp = new THREE.Group();
@@ -813,10 +829,11 @@ function ergonomicMouse() {
 }
 
 // ------------------------------------------------------------- AirPods Pro case
-// Standing up: a squircle seen from the front, pillowed front and back, with the lid's
-// seam a third of the way down and a hinge you can't see from here.
+// A squircle, pillowed front and back, with the lid's seam a third of the way down. Built
+// standing up, then laid on its back with the front facing up and the hinge away from you.
 function airpodsCase() {
   const root = new THREE.Group();
+  const lying = new THREE.Group();
   const W = 0.0606, H = 0.0452, D = 0.0217, SEAM = H - 0.0148;
   const bevel = 0.0072, grow = 0.0036;
   const a = W / 2 - grow, b = H / 2 - grow, n = 4.4;
@@ -849,6 +866,9 @@ function airpodsCase() {
   lid.position.y = 0.0003;
   const led = mesh(new THREE.CircleGeometry(0.0009, 16), M("#2b2d2c", 0.4), { cast: false });
   led.position.set(0, SEAM - 0.009, D / 2 + 0.00005);
-  root.add(body, lid, led);
+  lying.add(body, lid, led);
+  lying.rotation.x = -Math.PI / 2;
+  lying.position.set(0, D / 2, H / 2); // resting on its back, centred where it sits
+  root.add(lying);
   return root;
 }

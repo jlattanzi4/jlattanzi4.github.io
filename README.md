@@ -18,8 +18,9 @@ You sit at my desk, late in the evening. Everything on it does something:
 | Sticky notes on the monitor | Email, LinkedIn |
 | The desk lamp and the monitor light | Switch on and off |
 | The keyboard | Its keys go down when you type on yours |
+| An espresso | A sip at a time. When it's empty, click for another |
 
-The mouse, the AirPods, the espresso and the plant are just there, as on any desk.
+The mouse, the AirPods and the snake plant are just there, as on any desk.
 
 Below the desk is the same work as a plain list, which is also what shows without JavaScript or WebGL. Keyboard users can Tab through every object; the watch and the macro pad open a close-up with buttons for what they do.
 
@@ -32,7 +33,7 @@ Below the desk is the same work as a plain list, which is also what shows withou
 - `room/watch.js`, `room/book.js`, `room/github.js`, `room/macropad.js`: the objects with more going on.
 - `room/screen.js`: the monitor's desktop, painted onto the screen from the chair and shown as real HTML when you lean in, plus the live parts (the NFL pick, the redline, the start lights, the reading shelf).
 
-To load quickly it fetches the whole module graph at once (`modulepreload`), compiles every shader once, off the main thread where the browser allows, and photographs the desk for reflections only after the first frame.
+To load quickly it fetches the whole module graph at once (`modulepreload`) and compiles every shader once, for the buffer the desk is drawn into, off the main thread where the browser allows. Materials that differ only in which maps they have get a plain white map, so they share a program: on a first visit, compiling is most of the wait. It photographs the desk for reflections only after the first frame.
 - `room/main.js`: the camera, hovering, clicking, close-ups and keyboard access. `room/kit.js` has the shared helpers.
 - `room.css`, `index.html`.
 

@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- With JavaScript the desk is the whole page and the list is a sheet over it; without, the list is the page. -->
+<script>document.documentElement.classList.add("desk")</script>
 <title>Joseph Lattanzi</title>
 <meta name="description" content="Joseph Lattanzi, data scientist. Pull up a chair at his desk: an NFL survivor-pool optimizer, a study of boilerplate in 47,643 SEC risk disclosures, a fantasy F1 game, and a readmission thesis.">
 <meta name="author" content="Joseph Lattanzi">
@@ -204,6 +206,7 @@
 
 <!-- The same work, for a reader in a hurry, or without WebGL. -->
 <section class="list" id="list" aria-labelledby="list-h">
+  <a class="list-close" href="#room">Back to the desk</a>
   <p class="list-name">Joseph Lattanzi</p>
   <h2 id="list-h">Data scientist. The work, as a list.</h2>
   <ol>
@@ -230,6 +233,7 @@
   </ol>
   <p class="contact"><a href="mailto:lattanzi.joseph@gmail.com">lattanzi.joseph@gmail.com</a> <a href="https://github.com/jlattanzi4">GitHub</a> <a href="https://www.linkedin.com/in/joseph-lattanzi/">LinkedIn</a></p>
 </section>
+<a class="scrim" href="#room" tabindex="-1" aria-hidden="true"></a>
 </main>
 <noscript><style>.room { display: none; }</style></noscript>
 </body>

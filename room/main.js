@@ -32,6 +32,7 @@ let renderer;
 try {
   renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: "high-performance" });
 } catch {
+  document.documentElement.classList.remove("desk");
   document.body.classList.add("flat");
   throw new Error("WebGL unavailable; showing the list instead");
 }
@@ -335,7 +336,7 @@ async function activate(id) {
 
 // Keyboard users reach every object through buttons laid over the scene:
 // the computer first, then the projects, the things that are mine, the ways to reach me, and the rest.
-const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "mail", "linkedin", "keyboard", "lamp", "lightbar"];
+const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
 const spots = TAB_ORDER.filter((id) => items[id]).map((id) => items[id]).map((item) => {
   const b = document.createElement("button");
   b.type = "button";
@@ -361,6 +362,24 @@ addEventListener("keydown", (e) => { if (typing(e)) items.keyboard.pressKey(e.co
 addEventListener("keyup", (e) => { items.keyboard.pressKey(e.code, false); });
 addEventListener("blur", () => { for (const c of ["ShiftLeft", "MetaLeft", "AltLeft", "ControlLeft"]) items.keyboard.pressKey(c, false); });
 
+// ------------------------------------------------ the list, as a sheet over the desk
+// The sheet opens and closes by itself (it's #list, styled with :target), so it works before
+// this script has run. Here: Esc closes it, Tab stays inside it, and the desk stops drawing.
+const list = document.getElementById("list");
+const listOpen = () => location.hash === "#list";
+let wasOpen = false;
+function onHash() {
+  const open = listOpen();
+  room.inert = open;
+  // Leaving a fragment drops focus to the page, so it goes back to the link that opened the list.
+  if (open) list.querySelector(".list-close").focus({ preventScroll: true });
+  else if (wasOpen && (document.activeElement === document.body || list.contains(document.activeElement))) room.querySelector(".to-list").focus({ preventScroll: true });
+  wasOpen = open;
+}
+addEventListener("hashchange", onHash);
+onHash();
+addEventListener("keydown", (e) => { if (e.key === "Escape" && listOpen()) location.hash = "room"; });
+
 // ----------------------------------------------------------------- loop
 const NO_LIFT = new Set(["monitor", "mail", "linkedin", "lamp", "lightbar", "keyboard", "github"]);
 let running = true;
@@ -369,6 +388,7 @@ const timing = { start: 0, count: 0 };
 function frame(now) {
   if (!running) return;
   requestAnimationFrame(frame);
+  if (frames > 2 && listOpen()) return; // nothing to see behind the sheet
   stepTweens(now);
   gaze.x += (gaze.tx - gaze.x) * 0.05;
   gaze.y += (gaze.ty - gaze.y) * 0.05;
@@ -381,11 +401,11 @@ function frame(now) {
     canvas.style.cursor = id ? "pointer" : "";
   } else if (id !== hovered && !document.activeElement?.classList.contains("spot")) {
     hovered = id;
-    canvas.style.cursor = id ? "pointer" : "";
+    canvas.style.cursor = id && !items[id].decor ? "pointer" : ""; // decor has a label, nothing to click
     if (id) showLabel(id); else hideLabel();
   } else if (hovered && mode === "desk") showLabel(hovered);
   for (const item of Object.values(items)) {
-    const want = item.id === hovered && mode === "desk" && !NO_LIFT.has(item.id) && !busy ? 0.008 : 0;
+    const want = item.id === hovered && mode === "desk" && !NO_LIFT.has(item.id) && !item.decor && !busy ? 0.008 : 0;
     item.lift += (want - item.lift) * 0.2;
     if (Math.abs(item.lift) > 1e-5 || want) item.root.position.y = item.baseY + item.lift;
   }
@@ -423,7 +443,7 @@ placeSpots();
 // Compile every shader before the first frame without blocking the page (browsers that
 // support it compile in parallel), then photograph the lit desk for reflections once it's up.
 // Never wait on it for long: if a browser is slow to report, the first frame compiles the rest.
-await Promise.race([renderer.compileAsync(scene, camera).catch(() => {}), new Promise((ok) => setTimeout(ok, 1500))]);
+await Promise.race([look.compile().catch(() => {}), new Promise((ok) => setTimeout(ok, 1500))]);
 requestAnimationFrame(frame);
 requestAnimationFrame(() => requestAnimationFrame(() => look.captureLight()));
 setTimeout(() => look.captureLight(), 1500); // again once everything has drawn once

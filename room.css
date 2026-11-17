@@ -241,8 +241,30 @@ a { color: inherit; text-underline-offset: 0.2em; text-decoration-thickness: 1px
 .list .meta a { color: var(--ink); font-weight: 500; }
 .list .contact { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 32px; font: 500 14px/1.4 var(--sans); }
 
+/* With JavaScript the desk is the whole page, and the list is a sheet pulled over it. It opens
+   as #list (:target), so the link to it works even before the desk's code has loaded, and the
+   browser's Back button closes it. Without JavaScript, or WebGL, the list is simply the page. */
+.list-close, .scrim { display: none; }
+.desk, .desk body { height: 100%; overflow: hidden; }
+.desk .room { min-height: 0; }
+.desk .list {
+  position: fixed; z-index: 20; top: 0; right: 0; bottom: 0; width: min(40rem, 100%); max-width: none; margin: 0;
+  padding: 72px clamp(24px, 6vw, 56px) 64px; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--page); box-shadow: -30px 0 80px rgba(0, 0, 0, 0.5);
+  translate: 100% 0; visibility: hidden;
+  transition: translate 0.42s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s linear 0.42s;
+}
+.desk .list:target { translate: 0 0; visibility: visible; transition: translate 0.42s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.desk .list-close {
+  display: inline-block; position: absolute; top: 20px; right: 20px; padding: 8px 14px; border: 1px solid var(--rule); border-radius: 999px;
+  font: 500 13px/1 var(--sans); text-decoration: none;
+}
+.desk .list-close:hover { background: var(--rule); }
+.desk .scrim { display: block; position: fixed; inset: 0; z-index: 19; background: rgba(5, 5, 5, 0.6); opacity: 0; pointer-events: none; transition: opacity 0.42s; }
+.desk .list:target + .scrim { opacity: 1; pointer-events: auto; cursor: default; }
+
 @media (prefers-reduced-motion: reduce) {
-  #scene, .screen, .win, .dock button, .rl-del, .redline, .label, .hint, .inspect, .r-favs a { transition: none !important; animation: none !important; }
+  #scene, .screen, .win, .dock button, .rl-del, .redline, .label, .hint, .inspect, .r-favs a, .list, .scrim { transition: none !important; animation: none !important; }
 }
 
 @media (hover: none) { .dock button span { display: none; } }
