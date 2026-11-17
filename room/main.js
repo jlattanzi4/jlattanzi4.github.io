@@ -56,8 +56,8 @@ items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
 items.football.note = recordLine(record);
 // The AirPods are just AirPods, unless Spotify has told the desk what's been on repeat.
 if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url };
-items.departures = buildDepartures(scene, { x: 0.68, y: TOP, z: -0.42, ry: -0.55 });
-items.drafts = buildDrafts(scene, { x: -0.13, y: onMat, z: -0.14, ry: 0.05 });
+items.departures = buildDepartures(scene, { x: 0.6, y: TOP, z: -0.38, ry: -0.45 });
+items.drafts = buildDrafts(scene, { x: -0.655, y: TOP, z: -0.79 }); // the back corner, beside the lamp
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
@@ -79,8 +79,8 @@ function homePose() {
   const tall = tallView();
   camera.fov = tall ? 62 : 46;
   const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  // Far enough back to see the whole desk across, from the folder to the espresso.
-  const fitW = tall ? 0.8 : 1.4;
+  // Far enough back to see the whole desk across, from the folder to the departure sign.
+  const fitW = tall ? 0.8 : 1.46;
   const d = Math.max(tall ? 0.9 : 1.08, fitW / 2 / (half * a));
   const target = tall ? new THREE.Vector3(0, 0.9, -0.42) : HOME_TARGET.clone();
   return { pos: target.clone().addScaledVector(HOME_DIR, d), target };

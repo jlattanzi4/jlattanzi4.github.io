@@ -1,4 +1,4 @@
-// A little LED sign on the desk with the next Red Line trains from Park Street and the
+// A little LED sign on the desk with the next Red Line trains from Broadway and the
 // Bluebikes dock outside it, live: a teaser for the question of whether a bike beats the T.
 // Predictions come from the MBTA's v3 API (every 30 seconds while the page is in view), the
 // dock from Bluebikes' public GBFS feed (every 3 minutes). Neither needs a key.
@@ -6,9 +6,9 @@
 import * as THREE from "three";
 import { canvasTexture, M, box, mesh } from "./kit.js";
 
-const PREDICTIONS = "https://api-v3.mbta.com/predictions?filter%5Bstop%5D=place-pktrm&filter%5Broute%5D=Red&include=trip&sort=departure_time&page%5Blimit%5D=12";
+const PREDICTIONS = "https://api-v3.mbta.com/predictions?filter%5Bstop%5D=place-brdwy&filter%5Broute%5D=Red&include=trip&sort=departure_time&page%5Blimit%5D=12";
 const DOCKS = "https://gbfs.bluebikes.com/gbfs/en/station_status.json";
-const DOCK_ID = "2093488029445054742"; // Park Street T Stop - Tremont St at Park St
+const DOCK_ID = "56817d8e-3a1c-431a-a529-1a600f80c364"; // Broadway T Stop
 const HEADSIGNS = ["Alewife", "Ashmont", "Braintree"];
 
 // ------------------------------------------------------------ the data
@@ -100,7 +100,7 @@ export function buildDepartures(scene, { x, y, z, ry }) {
   function render() {
     grid.fill(null);
     const clock = new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/New_York" }).replace(/ [AP]M/, "");
-    write("PARK ST", 1, 1, DIM);
+    write("BROADWAY", 1, 1, DIM);
     right(clock, 1, DIM);
     const live = HEADSIGNS.filter((h) => next?.[h] && mins(next[h]) > -1);
     if (failed && !next) write("NO SIGNAL", 1, 13, AMBER);
@@ -114,7 +114,12 @@ export function buildDepartures(scene, { x, y, z, ry }) {
       const t = when(next[h]);
       right(3 + textWidth(h) + 2 < COLS - 1 - textWidth(t) ? t : t.replace(" MIN", "M"), cy, AMBER);
     });
-    if (bikes) { write(`${bikes.bikes} BIKES`, 1, 26, BLUE); right(`${bikes.docks} DOCKS`, 26, BLUE); }
+    if (bikes) {
+      // "13 DOCKS" if it fits beside the bikes, "13 OPEN" if it doesn't.
+      const left = `${bikes.bikes} BIKES`;
+      const docks = 1 + textWidth(left) + 3 < COLS - 1 - textWidth(`${bikes.docks} DOCKS`) ? `${bikes.docks} DOCKS` : `${bikes.docks} OPEN`;
+      write(left, 1, 26, BLUE); right(docks, 26, BLUE);
+    }
     paint();
   }
 
@@ -130,7 +135,7 @@ export function buildDepartures(scene, { x, y, z, ry }) {
 
   const item = {
     root,
-    label: "Park Street, live",
+    label: "Broadway, live",
     get sub() {
       const live = HEADSIGNS.filter((h) => next?.[h] && mins(next[h]) > -1);
       if (!next) return "The next Red Line trains, from the MBTA";
@@ -141,7 +146,7 @@ export function buildDepartures(scene, { x, y, z, ry }) {
       return bikes ? `Bluebikes outside: ${bikes.bikes} ${bikes.bikes === 1 ? "bike" : "bikes"}, ${bikes.docks} open ${bikes.docks === 1 ? "dock" : "docks"}. Which is faster? Working on it.` : "";
     },
     view: { offset: new THREE.Vector3(0, 0.05, 0.2), target: new THREE.Vector3(0, 0.038, 0) },
-    caption: () => "Live from the MBTA and Bluebikes: the next Red Line trains from Park Street, and the bike dock outside.",
+    caption: () => "Live from the MBTA and Bluebikes: the next Red Line trains from Broadway, and the bike dock outside.",
     actions: () => [],
     press: () => {},
     // Start fetching once the desk is up, and only while anyone can see it.

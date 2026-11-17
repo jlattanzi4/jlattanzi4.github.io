@@ -1,6 +1,6 @@
-// Crumpled drafts by the keyboard: things I tried and cut, and why. Click one and it
-// uncrumples into a flat sheet with its note; "Unfold another" crumples it back and opens
-// the next.
+// A little wastebasket in the corner of the desk, with crumpled drafts in it: things I
+// tried and cut, and why. Click it and one comes out and uncrumples into a flat sheet with its
+// note, held up to read; "Fish out another" crumples it back into the bin and opens the next.
 //
 // The paper is one sheet of geometry with two shapes: lying flat, and wrapped into a ball
 // (the square folded over a sphere, octahedron-style, so it covers it once, then creased with
@@ -18,7 +18,7 @@ const NOTES = [
   ["This site, twice", "A tidy list, then cards on a desk. Both fine. Neither fun."],
 ];
 
-const W = 0.15, H = 0.19, SX = 18, SY = 24, R = 0.026;
+const W = 0.15, H = 0.19, SX = 18, SY = 24, R = 0.024;
 
 // A sheet from a notepad, in my handwriting, the title struck through.
 function noteTexture([title, body]) {
@@ -63,17 +63,40 @@ export function buildDrafts(scene, { x, y, z, ry = 0 }) {
   root.rotation.y = ry;
   scene.add(root);
 
-  // The sheet, flat, its top toward the monitor. Opened, it's held up above the other drafts
-  // and tipped toward you, the way you'd smooth one out to read it.
+  // The bin: woven rattan, a little narrower at the foot, with a wrapped rim.
+  const BIN_H = 0.1, BIN_TOP = 0.055, BIN_FOOT = 0.044;
+  const weave = canvasTexture(512, 256, (g, w, h) => {
+    g.fillStyle = "#6e4c2c"; g.fillRect(0, 0, w, h);
+    const rows = 14, cols = 24, rh = h / rows, cw = w / cols;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const over = (r + c) % 2 === 0;
+      const x = c * cw, y = r * rh;
+      const grad = g.createLinearGradient(x, y, x, y + rh);
+      grad.addColorStop(0, over ? "#d2a874" : "#9c7246"); grad.addColorStop(0.5, over ? "#e2bc88" : "#b08452"); grad.addColorStop(1, over ? "#b88c58" : "#86603a");
+      g.fillStyle = grad;
+      g.fillRect(x + 1, y + 1.5, cw - 2, rh - 3);
+    }
+  }, { repeat: [3, 1] });
+  const rattan = M("#ffffff", 0.75, 0, { map: weave, side: THREE.DoubleSide });
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(BIN_TOP, BIN_FOOT, BIN_H, 48, 1, true), rattan);
+  wall.position.y = BIN_H / 2;
+  wall.castShadow = wall.receiveShadow = true;
+  const floor = new THREE.Mesh(new THREE.CircleGeometry(BIN_FOOT, 32), M("#6e4c2c", 0.8));
+  floor.rotation.x = -Math.PI / 2; floor.position.y = 0.001;
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(BIN_TOP, 0.0035, 8, 64), M("#b88c58", 0.7));
+  rim.rotation.x = Math.PI / 2; rim.position.y = BIN_H;
+  root.add(wall, floor, rim);
+
+  // The sheet, flat. Fished out, it's held up above the bin, facing you, the way you'd smooth
+  // one out to read it; the close-up looks at it from SEE.
+  const AT = new THREE.Vector3(0.05, 0.2, 0.07), SEE = new THREE.Vector3(0.14, 0.36, 0.36);
   const base = new THREE.PlaneGeometry(W, H, SX, SY).toNonIndexed();
-  base.rotateX(-Math.PI / 2);
-  const held = base.clone();
-  held.rotateX(0.5);
-  held.translate(0, 0.085, 0.015);
+  const facing = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), SEE.clone().sub(AT).normalize());
+  const held = base.clone().applyQuaternion(facing).translate(AT.x, AT.y, AT.z);
   // Smoothed out, it keeps its creases: a few ridges across it, a couple of millimetres deep.
   const flat = held.attributes.position.array.slice();
   {
-    const r = rng(5), uv = held.attributes.uv, n = new THREE.Vector3(0, Math.cos(0.5), Math.sin(0.5));
+    const r = rng(5), uv = held.attributes.uv, n = new THREE.Vector3(0, 0, 1).applyQuaternion(facing);
     const ridges = Array.from({ length: 6 }, () => ({ a: r() * Math.PI, f: 9 + r() * 14, ph: r() * 6, h: 0.0006 + r() * 0.0008 }));
     for (let i = 0; i < uv.count; i++) {
       const u = uv.getX(i), v = uv.getY(i);
@@ -103,15 +126,16 @@ export function buildDrafts(scene, { x, y, z, ry = 0 }) {
     nor.needsUpdate = true;
   }
   const blank = blankTexture();
-  const spots = [[-0.02, 0.012, 0.3], [0.045, -0.01, 1.7], [0.0, -0.045, 3.1]];
-  const balls = spots.map(([bx, bz, spin], i) => {
+  // In the bin, one on another; the top one shows over the rim.
+  const spots = [[0.002, 0.003, 0.004, 0.3], [-0.012, 0.038, 0.008, 1.7], [0.011, 0.07, -0.006, 3.1]];
+  const balls = spots.map(([bx, by, bz, spin], i) => {
     const geo = base.clone();
     geo.setAttribute("position", new THREE.BufferAttribute(crumpledPositions(base, 11 + i * 7), 3));
     geo.computeVertexNormals();
     smooth(geo.attributes.normal, 0.55); // creased, but still paper
     const ball = new THREE.Mesh(geo, paper(blank));
     ball.castShadow = true; // not on itself: a crumpled ball in its own shadow looks like a rock
-    ball.position.set(bx, 0, bz);
+    ball.position.set(bx, by, bz);
     ball.rotation.y = spin;
     root.add(ball);
     return ball;
@@ -174,13 +198,13 @@ export function buildDrafts(scene, { x, y, z, ry = 0 }) {
 
   return {
     root,
-    label: "Crumpled drafts",
-    sub: "Things I tried and cut. Unfold one",
-    view: { offset: new THREE.Vector3(0, 0.33, 0.2), target: new THREE.Vector3(0, 0.07, 0.01) },
+    label: "Wastebasket",
+    sub: "Things I tried and cut. Fish one out",
+    view: { offset: SEE.clone(), target: AT.clone() },
     caption: () => `${NOTES[note][0]}: ${NOTES[note][1]}`,
-    actions: () => [{ label: "Unfold another", run: another }],
+    actions: () => [{ label: "Fish out another", run: another }],
     onInspect: () => { if (open == null) { busy = true; unfold().finally(() => { busy = false; }); } },
-    // Leaving crumples it back, and the next visit opens the next one.
+    // Leaving crumples it back into the bin, and the next visit opens the next one.
     reset: () => { crumple(400).then(() => { note = (note + 1) % notes.length; ballNext = (ballNext + 1) % balls.length; }); },
     press: () => another(),
   };

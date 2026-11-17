@@ -21,13 +21,13 @@ You sit at my desk, late in the evening. Everything on it does something:
 | An espresso | A sip at a time. When it's empty, click for another |
 | A snake plant | Watered with every commit: the longer since my last contribution on GitHub, the more it wilts |
 | The window (you only see its light) | Boston's sky, right now: rain runs down the wall, snow banks up on the sill, the moon is in its real phase. The monitor's menu bar says the weather |
-| A little LED sign | The next Red Line trains from Park Street and the Bluebikes dock outside, live |
+| A little LED sign | The next Red Line trains from Broadway and the Bluebikes dock outside, live |
 | The AirPods | What I've had on repeat lately, from Spotify. Click to listen |
-| Crumpled drafts | Things I tried and cut. Each one uncrumples to say why |
+| A wastebasket in the corner | Crumpled drafts: things I tried and cut. Fish one out and it uncrumples to say why |
 
 The mouse is just there, as on any desk.
 
-The same work is also a plain list: "See it as a list" pulls it over the desk, and it's the whole page without JavaScript or WebGL. Keyboard users can Tab through every object; the watch, the macro pad, the sign and the drafts open a close-up with buttons for what they do.
+The same work is also a plain list: "See it as a list" pulls it over the desk, and it's the whole page without JavaScript or WebGL. Keyboard users can Tab through every object; the watch, the macro pad, the sign and the wastebasket open a close-up with buttons for what they do.
 
 ## How it's built
 
