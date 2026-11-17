@@ -1,8 +1,9 @@
 name: Refresh the desk
 
-# Two things on the desk come from elsewhere: the book I'm reading (from my Goodreads
-# profile) and the contribution graph on the wall (from GitHub). Once a day is plenty.
-# The graph covers full weeks to last Saturday, so it only changes once a week.
+# Some things on the desk come from elsewhere: the book I'm reading (from my Goodreads
+# profile), the contribution graph on the wall and the day the snake plant was last watered
+# (from GitHub), and the NFL optimizer's own season (from that repo's history). Once a day
+# is plenty. The graph covers full weeks to last Saturday, so it only changes once a week.
 
 on:
   schedule:
@@ -23,8 +24,17 @@ jobs:
       - uses: actions/checkout@v7
       # Pinned to a release: setup-uv publishes no moving major tag.
       - uses: astral-sh/setup-uv@v10.3.3
+      # The survivor record replays the optimizer's data as it stood before each week,
+      # so it needs that repo's whole history.
+      - uses: actions/checkout@v7
+        with:
+          repository: jlattanzi4/nfl-survivor-optimizer
+          path: nfl
+          fetch-depth: 0
       - name: Test the parsers
-        run: uv run --no-project --with pytest pytest scripts -q
+        run: |
+          uv run --no-project --with pytest pytest scripts -q
+          node --test scripts/survivor.test.mjs
       # Each script exits 1 without writing if what it read doesn't check out, so a failed
       # step leaves the last good file published. One failing doesn't stop the other.
       - name: Read the Goodreads profile
@@ -37,6 +47,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/github.py
+      - name: Grade the NFL optimizer's own season
+        id: survivor
+        continue-on-error: true
+        run: node scripts/survivor.mjs nfl
       - name: Commit if changed
         run: |
           git config user.name "github-actions[bot]"
@@ -49,7 +63,7 @@ jobs:
             git push
           fi
       - name: Report a failed refresh
-        if: steps.reading.outcome == 'failure' || steps.github.outcome == 'failure'
+        if: steps.reading.outcome == 'failure' || steps.github.outcome == 'failure' || steps.survivor.outcome == 'failure'
         run: |
-          echo "Goodreads: ${{ steps.reading.outcome }}, GitHub: ${{ steps.github.outcome }}"
+          echo "Goodreads: ${{ steps.reading.outcome }}, GitHub: ${{ steps.github.outcome }}, NFL: ${{ steps.survivor.outcome }}"
           exit 1

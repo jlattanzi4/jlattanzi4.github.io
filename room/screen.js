@@ -210,6 +210,41 @@ async function fillCall(win) {
   }
 }
 
+// How one entry has done this season by following the optimizer's call every week
+// (data/survivor.json, from scripts/survivor.mjs), in a sentence and as a row of weeks.
+const pctRound = (p) => `${Math.round(p * 100)}%`;
+const score = (w) => (w.score || "").replace("-", "–");
+export function recordLine(record) {
+  const weeks = record?.weeks;
+  if (!weeks?.length) return null;
+  const wins = weeks.filter((w) => w.result === "W").length;
+  const last = weeks.at(-1);
+  if (!record.alive) {
+    const how = last.result === "T" ? `Tied ${score(last)}` : `Lost ${score(last)}`;
+    const before = wins ? `${wins} ${wins === 1 ? "win" : "wins"}, then ` : "";
+    return `Its own picks: ${before}the ${last.name} in week ${last.week}. ${pctRound(last.p)} to win. ${how}.`;
+  }
+  return last.result ? `Its own picks this season: ${wins} for ${wins}, still alive.` : `Its own picks this season: ${wins} for ${wins}, and the ${last.name} this week.`;
+}
+function fillRecord(win, record) {
+  const box = $(".c-record", win);
+  if (!record?.weeks?.length) { box.hidden = true; return; }
+  box.hidden = false;
+  $(".c-rec", win).classList.toggle("long", record.weeks.length > 8);
+  $(".c-rec", win).replaceChildren(...record.weeks.map((w) => {
+    const li = document.createElement("li");
+    li.className = w.result === "W" ? "won" : w.result ? "lost" : "";
+    const b = document.createElement("b");
+    b.textContent = w.team;
+    li.title = `Week ${w.week}: the ${w.name} ${w.site === "home" ? "vs" : "at"} the ${w.opp_name}, ${pctRound(w.p)} to win${w.result ? `. ${w.result === "W" ? "Won" : w.result === "T" ? "Tied" : "Lost"} ${score(w)}` : ""}`;
+    li.append(b);
+    return li;
+  }));
+  const last = record.weeks.at(-1);
+  $(".c-rec-cap", win).textContent = record.alive ? ""
+    : `Out in week ${last.week}: the ${last.name}, ${pctRound(last.p)} to win, ${last.result === "T" ? "tied" : "lost"} ${score(last)}.`;
+}
+
 // Three real edits from Kellogg's fiscal 2019 risk section, struck and retyped.
 const EDITS = [
   [["k", "Competition against "], ["d", "retailer"], ["i", "private label"], ["k", " brands could negatively impact our business."]],
@@ -321,7 +356,7 @@ function fillReading(win, shelf) {
 }
 
 // --------------------------------------------------------------- the desktop
-export function createScreen({ onLeave, reduce, shelf }) {
+export function createScreen({ onLeave, reduce, shelf, record }) {
   const screen = $("#screen");
   const os = $("#os", screen);
   const paper = wallpaperCanvas();
@@ -365,7 +400,7 @@ export function createScreen({ onLeave, reduce, shelf }) {
     rlRun++;
     if (id !== "box") resetLights();
     const win = $(`[data-win="${id}"]`, screen);
-    if (id === "nfl") fillCall(win);
+    if (id === "nfl") { fillCall(win); fillRecord(win, record); }
     if (id === "sec") playRedline($(".redline", win), reduce());
     if (id === "reading") fillReading(win, shelf);
     if (win) requestAnimationFrame(() => $(".win-close", win)?.focus({ preventScroll: true }));

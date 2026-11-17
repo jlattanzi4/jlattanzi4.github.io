@@ -32,6 +32,17 @@ export function stepTweens(now) {
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 
+// --------------------------------------------------------------- data
+// A JSON file from this site, or null: the desk does without anything that doesn't load.
+export async function fetchJSON(url) {
+  try {
+    const res = await fetch(url, { cache: "no-cache" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
 // ----------------------------------------------------------- textures
 export function canvasTexture(w, h, draw, { repeat, color = true } = {}) {
   const c = document.createElement("canvas");

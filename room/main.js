@@ -1,14 +1,14 @@
 // Sitting at the desk. The camera is your head; everything on the desk does something.
 
 import * as THREE from "three";
-import { TOP, motion, tween, stepTweens } from "./kit.js";
+import { TOP, motion, tween, stepTweens, fetchJSON } from "./kit.js";
 import { buildDesk } from "./props.js";
 import { buildWatch } from "./watch.js";
 import { loadShelf, buildBook } from "./book.js";
 import { buildMacropad } from "./macropad.js";
 import { loadGithub, buildGithubPrint } from "./github.js";
 import { createLook, quality } from "./look.js";
-import { createScreen, screenTexture, theCall } from "./screen.js";
+import { createScreen, screenTexture, theCall, recordLine } from "./screen.js";
 
 performance.mark("desk:modules");
 const room = document.getElementById("room");
@@ -40,7 +40,7 @@ const tier = quality();
 renderer.setPixelRatio(tier.pixelRatio);
 
 const scene = new THREE.Scene();
-const [shelf, graph] = await Promise.all([loadShelf(), loadGithub(), fontsReady]);
+const [shelf, graph, record] = await Promise.all([loadShelf(), loadGithub(), fetchJSON("data/survivor.json"), fontsReady]);
 performance.mark("desk:data");
 
 const screenTex = screenTexture();
@@ -50,6 +50,7 @@ items.macropad = buildMacropad(scene, { x: 0.325, y: onMat, z: -0.262, ry: -0.04
 const book = buildBook(scene, shelf, { x: -0.54, z: -0.385, ry: 0.28 });
 if (book) items.book = book;
 items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
+items.football.note = recordLine(record);
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
@@ -138,7 +139,7 @@ const rememberFocus = () => { returnFocus = document.activeElement?.classList.co
 const restoreFocus = () => { returnFocus?.focus({ preventScroll: true }); returnFocus = null; };
 
 // -------------------------------------------------------------- desktop
-const desktop = createScreen({ reduce: () => motion.reduce, shelf });
+const desktop = createScreen({ reduce: () => motion.reduce, shelf, record });
 async function lookAtScreen(app) {
   if (mode === "moving") return;
   rememberFocus();
@@ -253,6 +254,7 @@ function showLabel(id) {
   const item = items[id];
   label.querySelector("b").textContent = item.label;
   label.querySelector("span").textContent = item.sub;
+  label.querySelector("small").textContent = item.note || "";
   const s = toScreen(anchor(item));
   // Keep the whole label on screen: it sits above its object unless that would cut it off.
   const w = label.offsetWidth, h = label.offsetHeight;
