@@ -70,6 +70,8 @@ jobs:
             echo "Nothing new on the desk"
           else
             git commit -m "data: refresh the desk ($(date -u +'%Y-%m-%d'))"
+            # A merge can land while this runs; catch up first, so the push isn't rejected.
+            git pull --rebase origin main
             git push
           fi
       - name: Report a failed refresh
