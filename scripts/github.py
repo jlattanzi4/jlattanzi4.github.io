@@ -1,8 +1,9 @@
-"""Refresh data/github.json, the contribution graph framed on the wall, from GitHub's GraphQL API.
+"""Refresh data/github.json from GitHub's GraphQL API: the contribution graph framed on the wall,
+and the day of my last contribution, which is when the snake plant was last watered.
 
-The graph covers the 52 full weeks up to last Saturday, so the file changes once a week,
-not every day. It needs a token in GITHUB_TOKEN: the workflow's own token is enough, and
-locally `GITHUB_TOKEN=$(gh auth token) python3 scripts/github.py` works.
+The graph covers the 52 full weeks up to last Saturday, so it changes once a week; the last
+contribution can change any day. It needs a token in GITHUB_TOKEN: the workflow's own token is
+enough, and locally `GITHUB_TOKEN=$(gh auth token) python3 scripts/github.py` works.
 
 Like scripts/reading.py, it validates the response and exits 1 without writing if anything
 looks wrong, so the last good graph stays up.
@@ -41,12 +42,21 @@ def window(today: date) -> tuple[date, date]:
     return end - timedelta(weeks=52) + timedelta(days=1), end
 
 
-def parse(payload: dict, start: date, end: date) -> dict:
+def calendar_days(payload: dict) -> list[dict]:
     if payload.get("errors"):
         raise ValueError(f"GitHub returned errors: {payload['errors']}")
     calendar = payload["data"]["user"]["contributionsCollection"]["contributionCalendar"]
-    days = [d for w in calendar["weeks"] for d in w["contributionDays"]]
-    days = [d for d in days if start.isoformat() <= d["date"] <= end.isoformat()]
+    return [d for w in calendar["weeks"] for d in w["contributionDays"]]
+
+
+def last_contribution(*payloads: dict) -> str | None:
+    """The latest day, across the calendars given, with at least one contribution."""
+    days = [d["date"] for p in payloads for d in calendar_days(p) if d["contributionCount"] > 0]
+    return max(days) if days else None
+
+
+def parse(payload: dict, start: date, end: date) -> dict:
+    days = [d for d in calendar_days(payload) if start.isoformat() <= d["date"] <= end.isoformat()]
     if len(days) != 364:
         raise ValueError(f"expected 364 days from {start} to {end}, got {len(days)}")
     if days[0]["date"] != start.isoformat() or days[-1]["date"] != end.isoformat():
@@ -87,15 +97,20 @@ def main() -> int:
     if not token:
         print("github: not updated: set GITHUB_TOKEN", file=sys.stderr)
         return 1
-    start, end = window(datetime.now(UTC).date())
+    today = datetime.now(UTC).date()
+    start, end = window(today)
     try:
-        graph = parse(fetch(start, end, token), start, end)
+        year = fetch(start, end, token)
+        graph = parse(year, start, end)
+        # A query may span at most a year, so the days since last Saturday are a second one.
+        recent = fetch(end + timedelta(days=1), today, token)
+        graph["last_contribution"] = last_contribution(year, recent)
     except Exception as e:  # noqa: BLE001 - any failure means: keep the last good file
         print(f"github: not updated: {e}", file=sys.stderr)
         return 1
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(graph, indent=2) + "\n")
-    print(f"github: {graph['total']} contributions, {start} to {end}")
+    print(f"github: {graph['total']} contributions, {start} to {end}; last on {graph['last_contribution']}")
     return 0
 
 

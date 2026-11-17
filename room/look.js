@@ -2,7 +2,8 @@
 // the light bar on the monitor, the screen itself, and an LED strip behind the monitor that
 // washes the wall. Between them the room falls off into the dark, the way it does at night.
 //
-// The image is rendered in linear HDR with 4x MSAA. Bloom picks up only what emits light (the
+// The image is rendered in linear HDR, at the screen's full resolution on a Retina display
+// (4x MSAA below that). Bloom picks up only what emits light (the
 // bulb, the light bar's strip, lume, the macro pad's OLED), then AgX tone mapping, a gentle
 // vignette and film grain, which also breaks up banding in the dark gradients. (Screen-space
 // ambient occlusion was tried and cut: the shadow maps already ground things, and it halved
@@ -19,12 +20,13 @@ import { HorizontalBlurShader } from "three/addons/shaders/HorizontalBlurShader.
 import { VerticalBlurShader } from "three/addons/shaders/VerticalBlurShader.js";
 import { FullScreenQuad } from "three/addons/postprocessing/Pass.js";
 import { TOP, canvasTexture, rng, tweening } from "./kit.js";
+import { createWindowLight } from "./window.js";
 
 const LAMP = { colour: "#ffad66", intensity: 0.9 };    // about 2700 K
 const BAR = { colour: "#ffe3c4", intensity: 0.85 };     // about 4000 K
 const SCREEN = { colour: "#c7d8ff", intensity: 2.2 };   // a cool, dim display
 const BIAS = { colour: "#ff9a52", intensity: 26 };      // warm LED strip on the wall
-const MOON = { colour: "#8ea4d8", intensity: 1.1 };    // through a window off to the right
+const MOON = { colour: "#8ea4d8", intensity: 2.4 };    // through a window off to the right
 
 const GradeShader = {
   uniforms: { tDiffuse: { value: null }, resolution: { value: new THREE.Vector2(1, 1) }, time: { value: 0 }, grain: { value: 0.022 }, vignette: { value: 0.42 }, fringe: { value: 0.006 }, lift: { value: 0.014 } },
@@ -79,9 +81,12 @@ function shareShaders(scene) {
 export function quality() {
   const coarse = matchMedia("(pointer: coarse)").matches;
   const small = Math.min(innerWidth, innerHeight) < 600;
-  // Past 1.5x the post-processing costs far more than it shows: grain and MSAA hide the rest.
+  // A Retina screen gets every pixel, so the words on the monitor and the sticky notes are
+  // crisp; main.js steps down to 1.5x, then 1x, if the first seconds show the GPU can't keep up.
+  // At 2x the pixels are small enough that 4x MSAA buys nothing you can see and costs half the
+  // frame rate, so it's only used below 2x (see samplesAt).
   return {
-    pixelRatio: Math.min(devicePixelRatio, 1.5),
+    pixelRatio: Math.min(devicePixelRatio, 2),
     shadow: coarse || small ? 1024 : 2048,
     samples: 4,
   };
@@ -100,12 +105,17 @@ export function createLook(renderer, scene, camera, items, tier) {
   const night = new THREE.HemisphereLight("#2c3650", "#120c08", 0.45);
   scene.add(night);
   // Moonlight from a window off to the right: cool, low, and long-shadowed, opposite the warm lamp.
-  const moon = new THREE.DirectionalLight(MOON.colour, MOON.intensity);
-  moon.position.set(1.6, 1.5, 0.1);
-  moon.target.position.set(0.3, TOP, -0.4);
+  // It carries a picture of the window (room/window.js), which is Boston's sky right now. It's a
+  // spotlight far enough out that its rays are nearly parallel, the way the moon's are; the
+  // window fills the middle of its beam, and no light falls outside the window.
+  const sky = createWindowLight(MOON.intensity);
+  const moon = new THREE.SpotLight(MOON.colour, MOON.intensity, 0, Math.atan(0.26), 0, 0);
+  moon.target.position.set(0.42, 1.0, -0.86);
+  moon.position.copy(moon.target.position).addScaledVector(new THREE.Vector3(1.1, 0.75, 1.5).normalize(), 3.4);
+  moon.map = sky.map;
   moon.castShadow = true;
   moon.shadow.mapSize.set(tier.shadow, tier.shadow);
-  Object.assign(moon.shadow.camera, { left: -0.9, right: 0.9, top: 0.7, bottom: -0.7, near: 0.5, far: 3.5 });
+  moon.shadow.camera.near = 1.5; moon.shadow.camera.far = 4.5;
   moon.shadow.bias = -0.0003; moon.shadow.normalBias = 0.01; moon.shadow.radius = 2.5;
   scene.add(moon, moon.target);
 
@@ -233,7 +243,8 @@ export function createLook(renderer, scene, camera, items, tier) {
 
   // ---- the camera's side: post-processing
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
-  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: tier.samples });
+  const samplesAt = (pixelRatio) => (pixelRatio >= 2 ? 0 : tier.samples);
+  const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: samplesAt(renderer.getPixelRatio()) });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(size.x / 2, size.y / 2), 0.4, 0.55, 2.2);
@@ -260,6 +271,7 @@ export function createLook(renderer, scene, camera, items, tier) {
     state,
     apply,
     captureLight,
+    sky,
     // Compile every material for the buffer the desk is actually drawn into. A shader drawn to
     // the screen is a different program from one drawn to a buffer (tone mapping, colour space),
     // so compiling against the screen would build each one for nothing and then again on the
@@ -273,6 +285,10 @@ export function createLook(renderer, scene, camera, items, tier) {
       return ready;
     },
     setSize(w, h, pixelRatio) {
+      const samples = samplesAt(pixelRatio);
+      if (composer.renderTarget1.samples !== samples) {
+        for (const rt of [composer.renderTarget1, composer.renderTarget2]) { rt.samples = samples; rt.dispose(); }
+      }
       composer.setPixelRatio(pixelRatio);
       composer.setSize(w, h);
       grade.uniforms.resolution.value.set(w, h);
@@ -298,6 +314,9 @@ export function createLook(renderer, scene, camera, items, tier) {
         dustGeo.attributes.color.needsUpdate = true;
       }
       dust.visible = state.lamp > 0.01;
+      const through = sky.update(now, reduce);
+      moon.intensity = through.intensity;
+      moon.color.copy(through.colour);
       time = (time + 1) % 997;
       grade.uniforms.time.value = reduce ? 0 : time;
       // Contact shadows only change when something moves.

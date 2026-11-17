@@ -51,7 +51,10 @@
 <link rel="modulepreload" href="room/book.js">
 <link rel="modulepreload" href="room/macropad.js">
 <link rel="modulepreload" href="room/github.js">
+<link rel="modulepreload" href="room/departures.js">
+<link rel="modulepreload" href="room/drafts.js">
 <link rel="modulepreload" href="room/look.js">
+<link rel="modulepreload" href="room/window.js">
 <link rel="modulepreload" href="room/screen.js">
 <script type="module" src="room/main.js"></script>
 </head>
@@ -63,7 +66,7 @@
   <h1 class="sr-only" id="name">Joseph Lattanzi, data scientist</h1>
   <canvas id="scene" aria-hidden="true"></canvas>
   <p class="loading" id="loading">Pulling up a chair…</p>
-  <div class="label" id="label" aria-hidden="true"><b></b><span></span></div>
+  <div class="label" id="label" aria-hidden="true"><b></b><span></span><small></small></div>
   <div class="hotspots" id="hotspots" role="group" aria-label="Things on the desk"></div>
   <p class="hint" id="hint"><span class="fine">Click anything on the desk</span><span class="touch">Tap anything. Swipe to look around</span></p>
   <a class="to-list" href="#list">See it as a list</a>
@@ -103,6 +106,7 @@
             <li><a href="https://www.linkedin.com/in/joseph-lattanzi/" target="_blank" rel="noopener">LinkedIn</a></li>
           </ul>
         </div>
+        <span class="wx" id="wx"><canvas width="26" height="26" aria-hidden="true"></canvas><span></span></span>
         <time id="clock"></time>
       </nav>
       <div class="hello">
@@ -125,6 +129,11 @@
             </dl>
             <ol class="c-path" aria-label="The path through the rest of the season"></ol>
             <p class="c-foot"></p>
+            <div class="c-record" hidden>
+              <p class="c-rec-h">Its own season, each pick made before kickoff</p>
+              <ol class="c-rec"></ol>
+              <p class="c-rec-cap"></p>
+            </div>
           </div>
           <div class="side">
             <p>Which team to pick each week of a survivor pool. It finds the best path through the season exactly, as an assignment problem, and prices each pick against the rest of the pool with 20,000 simulated seasons, from live betting lines.</p>

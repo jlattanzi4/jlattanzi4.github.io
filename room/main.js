@@ -1,14 +1,17 @@
 // Sitting at the desk. The camera is your head; everything on the desk does something.
 
 import * as THREE from "three";
-import { TOP, motion, tween, stepTweens } from "./kit.js";
+import { TOP, motion, tween, stepTweens, fetchJSON } from "./kit.js";
 import { buildDesk } from "./props.js";
 import { buildWatch } from "./watch.js";
 import { loadShelf, buildBook } from "./book.js";
 import { buildMacropad } from "./macropad.js";
 import { loadGithub, buildGithubPrint } from "./github.js";
+import { buildDepartures } from "./departures.js";
+import { buildDrafts } from "./drafts.js";
 import { createLook, quality } from "./look.js";
-import { createScreen, screenTexture, theCall } from "./screen.js";
+import { createScreen, screenTexture, theCall, recordLine } from "./screen.js";
+import { bostonSky } from "./window.js";
 
 performance.mark("desk:modules");
 const room = document.getElementById("room");
@@ -40,16 +43,21 @@ const tier = quality();
 renderer.setPixelRatio(tier.pixelRatio);
 
 const scene = new THREE.Scene();
-const [shelf, graph] = await Promise.all([loadShelf(), loadGithub(), fontsReady]);
+const [shelf, graph, record, music] = await Promise.all([loadShelf(), loadGithub(), fetchJSON("data/survivor.json"), fetchJSON("data/music.json"), fontsReady]);
 performance.mark("desk:data");
 
 const screenTex = screenTexture();
-const { items, updates, onMat } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines });
+const { items, updates, onMat, pods } = buildDesk(scene, { screenTexture: screenTex.tex, spines: shelf?.spines, lastWatered: graph?.last_contribution });
 items.watch = buildWatch(scene, { x: -0.335, y: TOP, z: -0.43, ry: -0.35 });
 items.macropad = buildMacropad(scene, { x: 0.325, y: onMat, z: -0.262, ry: -0.04 });
 const book = buildBook(scene, shelf, { x: -0.54, z: -0.385, ry: 0.28 });
 if (book) items.book = book;
 items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
+items.football.note = recordLine(record);
+// The AirPods are just AirPods, unless Spotify has told the desk what's been on repeat.
+if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url };
+items.departures = buildDepartures(scene, { x: 0.6, y: TOP, z: -0.38, ry: -0.45 });
+items.drafts = buildDrafts(scene, { x: -0.655, y: TOP, z: -0.79 }); // the back corner, beside the lamp
 
 // --------------------------------------------------------------- camera
 const camera = new THREE.PerspectiveCamera(42, 1, 0.01, 20);
@@ -71,8 +79,8 @@ function homePose() {
   const tall = tallView();
   camera.fov = tall ? 62 : 46;
   const half = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-  // Far enough back to see the whole desk across, from the folder to the espresso.
-  const fitW = tall ? 0.8 : 1.4;
+  // Far enough back to see the whole desk across, from the folder to the departure sign.
+  const fitW = tall ? 0.8 : 1.46;
   const d = Math.max(tall ? 0.9 : 1.08, fitW / 2 / (half * a));
   const target = tall ? new THREE.Vector3(0, 0.9, -0.42) : HOME_TARGET.clone();
   return { pos: target.clone().addScaledVector(HOME_DIR, d), target };
@@ -138,7 +146,7 @@ const rememberFocus = () => { returnFocus = document.activeElement?.classList.co
 const restoreFocus = () => { returnFocus?.focus({ preventScroll: true }); returnFocus = null; };
 
 // -------------------------------------------------------------- desktop
-const desktop = createScreen({ reduce: () => motion.reduce, shelf });
+const desktop = createScreen({ reduce: () => motion.reduce, shelf, record });
 async function lookAtScreen(app) {
   if (mode === "moving") return;
   rememberFocus();
@@ -253,6 +261,7 @@ function showLabel(id) {
   const item = items[id];
   label.querySelector("b").textContent = item.label;
   label.querySelector("span").textContent = item.sub;
+  label.querySelector("small").textContent = item.note || "";
   const s = toScreen(anchor(item));
   // Keep the whole label on screen: it sits above its object unless that would cut it off.
   const w = label.offsetWidth, h = label.offsetHeight;
@@ -336,7 +345,7 @@ async function activate(id) {
 
 // Keyboard users reach every object through buttons laid over the scene:
 // the computer first, then the projects, the things that are mine, the ways to reach me, and the rest.
-const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
+const TAB_ORDER = ["monitor", "folder", "football", "car", "thesis", "book", "watch", "macropad", "github", "drafts", "departures", "pods", "mail", "linkedin", "cup", "keyboard", "lamp", "lightbar"];
 const spots = TAB_ORDER.filter((id) => items[id]).map((id) => items[id]).map((item) => {
   const b = document.createElement("button");
   b.type = "button";
@@ -362,6 +371,39 @@ addEventListener("keydown", (e) => { if (typing(e)) items.keyboard.pressKey(e.co
 addEventListener("keyup", (e) => { items.keyboard.pressKey(e.code, false); });
 addEventListener("blur", () => { for (const c of ["ShiftLeft", "MetaLeft", "AltLeft", "ControlLeft"]) items.keyboard.pressKey(c, false); });
 
+// A few words, typed at the desk, do things. The keyboard's label gives away the first.
+let saying = null; // a label that's speaking up, which hovering doesn't replace until it's done
+function say(id, text, ms = 3200) {
+  const item = items[id], sub = item.sub;
+  item.sub = text;
+  saying = id;
+  showLabel(id);
+  setTimeout(() => {
+    item.sub = sub;
+    saying = null;
+    if (hovered) showLabel(hovered); else hideLabel();
+  }, ms);
+}
+const WORDS = {
+  coffee: () => items.cup.refill(),
+  espresso: () => items.cup.refill(),
+  lights: () => { const on = look.state.lamp < 0.5; items.lamp.sub = on ? "Switch it off" : "Switch it on"; return setLight("lamp", on); },
+  "box box": () => items.car.lap(),
+  touchdown: () => items.football.spin(),
+  water: () => say("plant", "Nice try. It only drinks commits"),
+};
+let typed = "";
+addEventListener("keydown", async (e) => {
+  if (!typing(e) || e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1 || mode !== "desk" || listOpen()) return;
+  typed = (typed + e.key.toLowerCase()).slice(-12);
+  const word = Object.keys(WORDS).find((w) => typed.endsWith(w));
+  if (!word || busy) return;
+  typed = "";
+  hint.classList.add("gone");
+  busy = true;
+  try { await WORDS[word](); } finally { busy = false; }
+});
+
 // ------------------------------------------------ the list, as a sheet over the desk
 // The sheet opens and closes by itself (it's #list, styled with :target), so it works before
 // this script has run. Here: Esc closes it, Tab stays inside it, and the desk stops drawing.
@@ -384,7 +426,8 @@ addEventListener("keydown", (e) => { if (e.key === "Escape" && listOpen()) locat
 const NO_LIFT = new Set(["monitor", "mail", "linkedin", "lamp", "lightbar", "keyboard", "github"]);
 let running = true;
 let frames = 0;
-const timing = { start: 0, count: 0 };
+// Frame times over the first seconds, to choose how many pixels to render (see quality()).
+const timing = { last: 0, gaps: [] };
 function frame(now) {
   if (!running) return;
   requestAnimationFrame(frame);
@@ -402,8 +445,8 @@ function frame(now) {
   } else if (id !== hovered && !document.activeElement?.classList.contains("spot")) {
     hovered = id;
     canvas.style.cursor = id && !items[id].decor ? "pointer" : ""; // decor has a label, nothing to click
-    if (id) showLabel(id); else hideLabel();
-  } else if (hovered && mode === "desk") showLabel(hovered);
+    if (saying) showLabel(saying); else if (id) showLabel(id); else hideLabel();
+  } else if (mode === "desk" && (saying || hovered)) showLabel(saying || hovered);
   for (const item of Object.values(items)) {
     const want = item.id === hovered && mode === "desk" && !NO_LIFT.has(item.id) && !item.decor && !busy ? 0.008 : 0;
     item.lift += (want - item.lift) * 0.2;
@@ -416,13 +459,19 @@ function frame(now) {
   if (frames === 0) performance.mark("desk:first-frame");
   if (frames++ === 1) { loading.classList.add("gone"); room.classList.add("ready"); }
   if (frames % 4 === 0 && mode === "desk") placeSpots();
-  // If the first few seconds run slow, render fewer pixels.
-  if (frames === 30) timing.start = now;
-  if (frames > 30 && frames <= 150) {
-    timing.count++;
-    if (frames === 150 && (now - timing.start) / timing.count > 26 && renderer.getPixelRatio() > 1) {
-      renderer.setPixelRatio(1);
-      resize();
+  // If the first seconds run slow, render fewer pixels: 2x, then 1.5x, then 1x. Judged on the
+  // median of 90 frames, so a one-off hitch (the reflections being photographed) doesn't count.
+  if (frames > 30 && timing.gaps !== null) {
+    if (timing.last) timing.gaps.push(now - timing.last);
+    timing.last = now;
+    if (timing.gaps.length === 90) {
+      const median = timing.gaps.sort((a, b) => a - b)[45];
+      const ratio = renderer.getPixelRatio();
+      if (median > 20 && ratio > 1) {
+        renderer.setPixelRatio(ratio > 1.5 ? 1.5 : 1);
+        resize();
+        timing.gaps = []; timing.last = 0; // and look again at the new size
+      } else timing.gaps = null; // fast enough: stop measuring
     }
   }
 }
@@ -448,4 +497,9 @@ requestAnimationFrame(frame);
 requestAnimationFrame(() => requestAnimationFrame(() => look.captureLight()));
 setTimeout(() => look.captureLight(), 1500); // again once everything has drawn once
 setTimeout(() => theCall().catch(() => {}), 1500); // warm up this week's pick in the background
+// Boston's sky, through the window and in the menu bar, again every 15 minutes.
+const lookOutside = () => bostonSky().then((sky) => { if (!sky) return; look.sky.setSky(sky); screenTex.setSky(sky); desktop.setSky(sky); });
+setTimeout(lookOutside, 1200);
+setTimeout(() => items.departures.start(), 1300);
+setInterval(lookOutside, 15 * 60 * 1000);
 if (new URLSearchParams(location.search).has("debug")) Object.assign(window, { desk: { THREE, scene, camera, renderer, look, items, inspect, leaveInspect } });

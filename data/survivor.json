@@ -1,0 +1,81 @@
+{
+  "season": 2026,
+  "pool": 50,
+  "updated": "2026-11-16T06:25:28+00:00",
+  "alive": false,
+  "out_in": 6,
+  "weeks": [
+    {
+      "week": 1,
+      "team": "JAX",
+      "opp": "CLE",
+      "site": "home",
+      "p": 0.7777,
+      "result": "W",
+      "picked_from": "2026-09-09T19:10:12+00:00",
+      "score": "34-10",
+      "name": "Jaguars",
+      "opp_name": "Browns"
+    },
+    {
+      "week": 2,
+      "team": "SF",
+      "opp": "MIA",
+      "site": "home",
+      "p": 0.8718,
+      "result": "W",
+      "picked_from": "2026-09-17T19:38:11+00:00",
+      "score": "35-13",
+      "name": "49ers",
+      "opp_name": "Dolphins"
+    },
+    {
+      "week": 3,
+      "team": "KC",
+      "opp": "MIA",
+      "site": "away",
+      "p": 0.836,
+      "result": "W",
+      "picked_from": "2026-09-24T19:53:41+00:00",
+      "score": "24-10",
+      "name": "Chiefs",
+      "opp_name": "Dolphins"
+    },
+    {
+      "week": 4,
+      "team": "MIN",
+      "opp": "MIA",
+      "site": "home",
+      "p": 0.8259,
+      "result": "W",
+      "picked_from": "2026-10-01T20:54:07+00:00",
+      "score": "15-10",
+      "name": "Vikings",
+      "opp_name": "Dolphins"
+    },
+    {
+      "week": 5,
+      "team": "HOU",
+      "opp": "TEN",
+      "site": "away",
+      "p": 0.7654,
+      "result": "W",
+      "picked_from": "2026-10-08T21:11:10+00:00",
+      "score": "26-3",
+      "name": "Texans",
+      "opp_name": "Titans"
+    },
+    {
+      "week": 6,
+      "team": "LAR",
+      "opp": "ARI",
+      "site": "home",
+      "p": 0.8546,
+      "result": "L",
+      "picked_from": "2026-10-15T19:46:36+00:00",
+      "score": "16-18",
+      "name": "Rams",
+      "opp_name": "Cardinals"
+    }
+  ]
+}

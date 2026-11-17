@@ -24,13 +24,25 @@ export function tween(duration, onUpdate, curve = "inOut") {
 export const tweening = () => tweens.size > 0;
 export function stepTweens(now) {
   for (const t of tweens) {
-    const p = Math.min(1, (now - t.start) / t.duration);
+    // A frame's timestamp can come from just before the tween started; never go below 0.
+    const p = Math.min(1, Math.max(0, (now - t.start) / t.duration));
     t.onUpdate(t.curve(p));
     if (p >= 1) { tweens.delete(t); t.done(); }
   }
 }
 export const lerp = (a, b, t) => a + (b - a) * t;
 export const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+
+// --------------------------------------------------------------- data
+// A JSON file from this site, or null: the desk does without anything that doesn't load.
+export async function fetchJSON(url) {
+  try {
+    const res = await fetch(url, { cache: "no-cache" });
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
 
 // ----------------------------------------------------------- textures
 export function canvasTexture(w, h, draw, { repeat, color = true } = {}) {

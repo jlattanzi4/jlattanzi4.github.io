@@ -60,3 +60,11 @@ def test_parse_rejects_errors():
     start, end = github.window(date(2026, 11, 16))
     with pytest.raises(ValueError, match="errors"):
         github.parse({"errors": [{"message": "Bad credentials"}]}, start, end)
+
+
+def test_last_contribution_is_the_latest_day_with_any():
+    start = date(2026, 11, 1)
+    quiet = payload(start, 20, level="NONE", count=0)
+    busy = payload(start, 5)  # Nov 1 to Nov 5
+    assert github.last_contribution(busy, quiet) == "2026-11-05"
+    assert github.last_contribution(quiet) is None
