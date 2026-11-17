@@ -170,6 +170,10 @@ export function theCall() {
     const now = Date.now();
     let week = 1;
     data.week_starts.forEach((iso, i) => { if (now >= Date.parse(iso)) week = i + 1; });
+    // Once the week's last game has kicked off there's nothing left to pick, so the call is
+    // for next week, as soon as its lines are out.
+    const open = (w) => data.games.some((g) => g.week === w && g.p != null && g.result == null && !(g.kickoff && Date.parse(g.kickoff) <= now));
+    if (!open(week) && week < 18 && open(week + 1)) week++;
     const worker = new Worker(`${base}js/worker.js`, { type: "module" });
     const result = await new Promise((ok, no) => {
       worker.onmessage = (e) => (e.data.error ? no(new Error(e.data.error)) : ok(e.data.result));
