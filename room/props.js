@@ -7,9 +7,14 @@ import { TOP, motion, tween, lerp, clamp, canvasTexture, rng, wrapText, M, P, bo
 
 // ----------------------------------------------------------- textures
 
+// The big surface textures need neither the data nor the fonts, so main.js has them painted
+// while those load (paintAhead), and buildDesk picks up the same ones.
+const once = (paint) => { const made = new Map(); return (key = "") => { if (!made.has(key)) made.set(key, paint(key)); return made.get(key); }; };
+export function paintAhead() { walnut("colour"); walnut("rough"); plasterTexture(); feltTexture(); }
+
 // Oiled walnut, five boards running left to right. One pass draws the colour, a second the
 // roughness (the open pores and dark grain catch less light than the oiled flat-sawn wood).
-function walnut(kind) {
+const walnut = once((kind) => {
   return canvasTexture(2048, 1024, (g, w, h) => {
     const r = rng(17);
     const colour = kind === "colour";
@@ -73,10 +78,10 @@ function walnut(kind) {
       g.fillRect(0, y0, w, 2);
     }
   }, { color: kind === "colour" });
-}
+});
 
 // Flat paint over plaster: a dark slate grey with a faint mottle, so the warm lights read against it.
-const plasterTexture = () => canvasTexture(1024, 512, (g, w, h) => {
+const plasterTexture = once(() => canvasTexture(1024, 512, (g, w, h) => {
   g.fillStyle = "#5d6366"; g.fillRect(0, 0, w, h);
   const r = rng(29);
   for (let i = 0; i < 260; i++) {
@@ -87,10 +92,10 @@ const plasterTexture = () => canvasTexture(1024, 512, (g, w, h) => {
     g.fillStyle = grad; g.fillRect(x - rad, y - rad, rad * 2, rad * 2);
   }
   for (let i = 0; i < 9000; i++) { g.fillStyle = `rgba(${r() < 0.5 ? "0,0,0" : "255,255,255"},${r() * 0.035})`; g.fillRect(r() * w, r() * h, 1.5, 1.5); }
-}, { repeat: [3, 2] });
+}, { repeat: [3, 2] }));
 
 // Wool felt: fine fibres and a little fuzz.
-const feltTexture = () => canvasTexture(512, 512, (g, w, h) => {
+const feltTexture = once(() => canvasTexture(512, 512, (g, w, h) => {
   g.fillStyle = "#808080"; g.fillRect(0, 0, w, h);
   const r = rng(41);
   for (let i = 0; i < 14000; i++) {
@@ -99,7 +104,7 @@ const feltTexture = () => canvasTexture(512, 512, (g, w, h) => {
     g.lineWidth = 0.6;
     g.beginPath(); g.moveTo(x, y); g.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
   }
-}, { repeat: [3, 1.3], color: false });
+}, { repeat: [3, 1.3], color: false }));
 
 const stickyTexture = (bg, lines, accent) => canvasTexture(512, 512, (g, w, h) => {
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
