@@ -1,4 +1,5 @@
-// The window off to the right, which the moonlight comes in through: Boston's sky, right now.
+// The window off to the right, which the moonlight (and by day the sun, room/sun.js) comes in
+// through: Boston's sky, right now.
 //
 // You never see the window, only its light. The moonlight carries a picture of the window (a
 // "cookie": its panes and glazing bars) that it projects onto the desk and the wall. When it's
@@ -70,12 +71,25 @@ export async function bostonSky() {
 }
 
 // One line for the menu bar and a sentence for its tooltip.
-export function skyLine(sky, moon) {
-  return sky ? `${sky.temp}° ${sky.text}` : moon.name;
+// By day the menu bar shows the sun, and the moon's phase stays out of it.
+export function skyLine(sky, moon, sunUp = false) {
+  return sky ? `${sky.temp}° ${sky.text}` : sunUp ? "Daytime" : moon.name;
 }
-export function skySentence(sky, moon) {
-  const m = `${moon.name}, ${Math.round(moon.lit * 100)}% lit.`;
-  return sky ? `Boston right now: ${sky.text.toLowerCase()}, ${sky.temp}°F. ${m}` : `The moon tonight: ${m}`;
+export function skySentence(sky, moon, sunUp = false) {
+  const m = sunUp ? "" : ` ${moon.name}, ${Math.round(moon.lit * 100)}% lit.`;
+  return sky ? `Boston right now: ${sky.text.toLowerCase()}, ${sky.temp}°F.${m}` : sunUp ? "The sun is up in Boston." : `The moon tonight:${m}`;
+}
+
+// The sun, for the menu bar by day: a warm disc with short rays.
+export function drawSun(g, cx, cy, r, colour = "#ffd27a") {
+  g.save();
+  g.fillStyle = colour; g.strokeStyle = colour; g.lineWidth = Math.max(1, r * 0.22); g.lineCap = "round";
+  g.beginPath(); g.arc(cx, cy, r * 0.55, 0, Math.PI * 2); g.fill();
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
+    g.beginPath(); g.moveTo(cx + c * r * 0.78, cy + sn * r * 0.78); g.lineTo(cx + c * r, cy + sn * r); g.stroke();
+  }
+  g.restore();
 }
 
 // ----------------------------------------------------- the window's light
@@ -101,8 +115,10 @@ export function createWindowLight(base) {
   let beads = [], runners = [], flakes = [];
   let flash = 0, nextFlash = 0, lastDraw = -1e9;
 
+  let version = 0;
   function setSky(next) {
     sky = next || sky;
+    version++;
     moon = moonPhase();
     const rain = sky.kind === "rain" || sky.kind === "storm" ? sky.strength : 0;
     beads = Array.from({ length: Math.round(200 * rain) }, () => ({ x: rnd(x0, x1), y: rnd(y0, y1), r: rnd(0.5, 1.5) }));
@@ -170,8 +186,9 @@ export function createWindowLight(base) {
 
   // Brightness and colour of the light through the window, given the sky and the moon.
   const colour = new THREE.Color();
+  const coverOf = () => (sky.kind === "fog" ? 1 : sky.kind === "clear" ? 0 : Math.max(sky.cloud / 100, sky.kind === "cloudy" ? 0.4 : 0.8));
   function light(now, reduce) {
-    const cover = sky.kind === "fog" ? 1 : sky.kind === "clear" ? 0 : Math.max(sky.cloud / 100, sky.kind === "cloudy" ? 0.4 : 0.8);
+    const cover = coverOf();
     const moonlit = 0.45 + 0.55 * moon.lit;
     // Under cloud the light is the city's glow off the clouds, and snow makes a city night bright.
     const glow = sky.kind === "snow" ? 1.1 : 0.55;
@@ -190,6 +207,10 @@ export function createWindowLight(base) {
     map,
     setSky,
     get moon() { return moon; },
+    // How much of the sky is cloud, 0 to 1, for the daylight (room/sun.js), and a count that
+    // changes whenever the weather does.
+    get cover() { return coverOf(); },
+    get version() { return version; },
     update(now, reduce) {
       if (animated() && !reduce && now - lastDraw > 45) {
         step(Math.min(100, now - lastDraw));
