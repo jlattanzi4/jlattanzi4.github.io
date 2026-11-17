@@ -55,7 +55,7 @@ if (book) items.book = book;
 items.github = buildGithubPrint(scene, graph, { x: 0.585, y: 1.2, z: -0.846 });
 items.football.note = recordLine(record);
 // The AirPods are just AirPods, unless Spotify has told the desk what's been on repeat.
-if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url };
+if (music) items.pods = { root: pods, label: "AirPods", sub: `On repeat lately: “${music.track}” by ${music.artist}`, note: "From my Spotify. Click to listen", href: music.url, hover: pods.userData.open };
 items.departures = buildDepartures(scene, { x: 0.6, y: TOP, z: -0.38, ry: -0.45 });
 items.drafts = buildDrafts(scene, { x: -0.655, y: TOP, z: -0.79 }); // the back corner, beside the lamp
 
@@ -236,6 +236,7 @@ for (const [id, item] of Object.entries(items)) {
   item.id = id;
   item.baseY = item.root.position.y;
   item.lift = 0;
+  item.hoverK = 0; // for objects that answer a hover themselves (`hover(k)`), eased 0 to 1
 }
 // Tag meshes after every item exists, innermost item last, so a note stuck on the folder is the note.
 const order = Object.keys(items).sort((a, b) => depth(items[a].root) - depth(items[b].root));
@@ -451,6 +452,10 @@ function frame(now) {
     const want = item.id === hovered && mode === "desk" && !NO_LIFT.has(item.id) && !item.decor && !busy ? 0.008 : 0;
     item.lift += (want - item.lift) * 0.2;
     if (Math.abs(item.lift) > 1e-5 || want) item.root.position.y = item.baseY + item.lift;
+    if (item.hover) {
+      const on = item.id === hovered && mode === "desk" && !busy ? 1 : 0;
+      if (on || item.hoverK > 1e-4) { item.hoverK += (on - item.hoverK) * 0.12; item.hover(item.hoverK); }
+    }
   }
   for (const u of updates) u(now);
   items.watch.update(now, look.state);
