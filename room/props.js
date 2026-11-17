@@ -935,6 +935,11 @@ function airpodsCase(lit = false) {
   lying.rotation.x = REST;
   lying.position.set(0, D / 2, H / 2); // resting on its back, centred where it sits
   root.add(lying);
+  // What the pointer hits: a still, invisible box around the case at rest and open, so the
+  // case moving out from under the pointer doesn't end the hover (and close it, and open it).
+  const reach = new THREE.Mesh(new THREE.BoxGeometry(W, 0.06, H), new THREE.MeshBasicMaterial({ visible: false }));
+  reach.position.y = 0.03;
+  root.add(reach);
   // Hovered (k from 0 to 1): picked up and tipped toward you with the lid swung open, the way
   // you'd hold it to take a bud out. Lying flat, the lid would open into the desk.
   root.userData.open = (k) => {
