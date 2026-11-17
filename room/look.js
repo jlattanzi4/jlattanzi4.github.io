@@ -82,7 +82,8 @@ export function quality() {
   const coarse = matchMedia("(pointer: coarse)").matches;
   const small = Math.min(innerWidth, innerHeight) < 600;
   // A Retina screen gets every pixel, so the words on the monitor and the sticky notes are
-  // crisp; main.js steps down to 1.5x, then 1x, if the first seconds show the GPU can't keep up.
+  // crisp. If the first seconds show the GPU can't keep up, main.js turns off MSAA, then steps
+  // down to 1.5x, then 1x.
   // At 2x the pixels are small enough that 4x MSAA buys nothing you can see and costs half the
   // frame rate, so it's only used below 2x (see samplesAt).
   return {
@@ -245,7 +246,9 @@ export function createLook(renderer, scene, camera, items, tier) {
 
   // ---- the camera's side: post-processing
   const size = renderer.getDrawingBufferSize(new THREE.Vector2());
-  const samplesAt = (pixelRatio) => (pixelRatio >= 2 ? 0 : tier.samples);
+  // Once the desk has run too slow, it never antialiases again (lighten(), below).
+  let lean = false;
+  const samplesAt = (pixelRatio) => (lean || pixelRatio >= 2 ? 0 : tier.samples);
   const target = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: samplesAt(renderer.getPixelRatio()) });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
@@ -286,6 +289,11 @@ export function createLook(renderer, scene, camera, items, tier) {
       renderer.setRenderTarget(was);
       return ready;
     },
+    get msaa() { return composer.renderTarget1.samples > 0; },
+    // For a GPU that can't keep up. 4x MSAA costs more than a step down in resolution saves (at
+    // 1.5x it stores four samples a pixel, 2.25 times what 2x stores without it), so it goes
+    // first, and for good.
+    lighten() { lean = true; },
     setSize(w, h, pixelRatio) {
       const samples = samplesAt(pixelRatio);
       if (composer.renderTarget1.samples !== samples) {
